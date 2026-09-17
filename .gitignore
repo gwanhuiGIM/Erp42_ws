@@ -22,4 +22,7 @@ __pycache__/
 # 대용량 바이너리 — GitHub 100MB 제한 초과(YOLO best.pt/last.pt 각 131MB) → 필요시 Git LFS로 별도 관리
 *.pt
 
-# 주의: docs/, docs/portfolio/ 는 프로젝트 산출물이라 의도적으로 무시하지 않음(포함)
+# push 불필요한 로컬 문서 정리용 디렉터리(팀 발표자료/보고서 원본 등)
+docs/docu/
+
+# 주의: docs/(위 docs/docu/ 제외)·docs/portfolio/ 는 프로젝트 산출물이라 의도적으로 무시하지 않음(포함)
