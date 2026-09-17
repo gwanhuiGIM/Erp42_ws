@@ -27,10 +27,12 @@
 ## 코드 연결관계 (요약)
 
 ```
-GPS/IMU/encoder → EKF(localization) → pathtracking → [src만: Controller 중재(lane/path)] → serial → 액추에이터
-                                            ↑                                    │
-                            camera → 차선 인식 ──┘(src: Controller 경유 / main: 구독자 없어 dead)
-                            LiDAR → 장애물 인식 ──(양쪽 다 pathtracking 진입 조건 dead branch)
+[src]  GPS/IMU/encoder → EKF → pathtracking → Controller(lane/path 중재) → serial → 액추에이터
+       camera → 차선 인식 → Controller            (camera topic mismatch로 실제로는 dead)
+       LiDAR → 장애물 인식 → pathtracking(brake==2 조건 검사)  (조건 발행자 없어 dead branch)
+
+[main] GPS/IMU/encoder → EKF → pathtracking → serial → 액추에이터   (Controller 없이 직접 발행)
+       camera → 차선 인식                                          (구독자 없어 dead — 어디에도 안 이어짐)
 ```
 
 - `src/`는 pathtracking → Controller(lane/path 중재) → serial 순서, `erp42_main/`은 Controller 없이 pathtracking이 serial에 직접 발행 — 이 차이가 두 ws의 가장 큰 아키텍처 세대 차이다.
