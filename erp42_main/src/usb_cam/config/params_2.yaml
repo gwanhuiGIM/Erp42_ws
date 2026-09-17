@@ -1,0 +1,23 @@
+/**:
+  ros__parameters:
+    video_device: "/dev/video4"
+    framerate: 30.0
+    io_method: "mmap"
+    frame_id: "camera2"
+    pixel_format: "yuyv"  # Or try "mjpeg" for lower CPU
+    image_width: 768
+    image_height: 480
+    camera_name: "test_camera2"
+    camera_info_url: "package://usb_cam/config/camera_info.yaml"
+    brightness: -1
+    contrast: -1
+    saturation: -1
+    sharpness: -1
+    gain: -1
+    auto_white_balance: false
+    white_balance: 4000
+    autoexposure: false
+    exposure: 100
+    autofocus: false
+    focus: -1
+

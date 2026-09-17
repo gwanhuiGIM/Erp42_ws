@@ -1,0 +1,15 @@
+<package format="3">
+  <name>cluster_bev</name>
+  <version>0.0.1</version>
+  <description>VLP-16 clustering and BEV publisher</description>
+  <maintainer email="you@example.com">you</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>pcl_conversions</depend>
+
+</package>
+

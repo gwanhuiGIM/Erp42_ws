@@ -1,0 +1,25 @@
+# ROS2 colcon 빌드 산출물 — 커밋 금지 (CLAUDE.md 공통 규칙)
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+
+# 비밀값 — .env.example만 커밋, 실제 값은 .env(로컬 전용)
+.env
+
+# 에디터/IDE — 개인 로컬 경로가 하드코딩돼 있어 팀 공유 부적합(.vscode/setting.json)
+.vscode/
+.idea/
+
+# 개인 도구 설정 — 프로젝트 산출물 아님
+.claude/
+.obsidian/
+
+# 대용량 바이너리 — GitHub 100MB 제한 초과(YOLO best.pt/last.pt 각 131MB) → 필요시 Git LFS로 별도 관리
+*.pt
+
+# 주의: docs/, docs/portfolio/ 는 프로젝트 산출물이라 의도적으로 무시하지 않음(포함)

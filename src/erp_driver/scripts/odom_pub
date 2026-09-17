@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+
+import rclpy
+from rclpy.node import Node
+from erp_interfaces.msg import ErpStatusMsg
+from math import radians, cos, sin, tan
+from geometry_msgs.msg import Quaternion, TransformStamped
+from nav_msgs.msg import Odometry
+from tf_transformations import quaternion_from_euler  # Ensure you have this package installed
+from tf2_ros import TransformBroadcaster
+
+class Erp42Odom(Node):
+    def __init__(self):
+        super().__init__('erp42_odom')
+        # Publishers and subscriptions are now created via the node API.
+        self.odom_pub = self.create_publisher(Odometry, '/odom', 500)
+        # The subscription queue size is specified as the last parameter.
+        self.sub_cmd = self.create_subscription(
+            ErpStatusMsg,
+            '/erp42_status',
+            self.sub_cmd_callback,
+            10)
+        # Create a timer to publish the odometry at 40 Hz.
+        self.timer = self.create_timer(1.0/40.0, self.odom_publish)
+        self.odom = Odometry()
+
+        # Initialize parameters and state variables.
+        self.init_param()
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0
+        self.pre_encoder = None
+        self.last_time = None
+        self.br = TransformBroadcaster(self)
+        self.linear_speed = 0.0
+
+    def init_param(self):
+        self.wheel_radius = 0.265      # in meters
+        self.wheel_base = 1.040        # in meters
+        self.encoder_ticks_per_rev = 100
+        self.noise_threshold = 0.001   # minimum distance (in meters) to consider a valid movement
+
+    def sub_cmd_callback(self, msg):
+        # Get the current time from the node's clock.
+        now = self.get_clock().now()
+        if self.pre_encoder is None:
+            self.pre_encoder = msg.encoder
+            self.last_time = now
+            return
+
+        # Calculate the elapsed time in seconds.
+        dt = (now.nanoseconds - self.last_time.nanoseconds) / 1e9
+        self.last_time = now
+
+        # Calculate the change in encoder ticks.
+        d_encoder = msg.encoder - self.pre_encoder
+        self.pre_encoder = msg.encoder
+
+        # Handle encoder rollover if necessary.
+        if abs(d_encoder) > (self.encoder_ticks_per_rev / 2):
+            d_encoder -= self.encoder_ticks_per_rev if d_encoder > 0 else -self.encoder_ticks_per_rev
+
+        # Compute the traveled distance.
+        distance = (d_encoder / float(self.encoder_ticks_per_rev)) * (2 * 3.14159 * self.wheel_radius)
+        if abs(distance) < self.noise_threshold:
+            distance = 0.0
+
+        # Calculate linear speed.
+        if dt > 0:
+            self.linear_speed = distance / dt
+        else:
+            self.linear_speed = 0.0
+
+        # Convert the steering value into radians.
+        steer = radians(msg.steer / -71)
+        # Compute the change in orientation.
+        if abs(steer) > 1e-6:  # Avoid division by zero.
+            turning_radius = self.wheel_base / tan(steer)
+            theta_dot = distance / turning_radius
+        else:
+            theta_dot = 0.0
+
+        # Update the robot's pose.
+        self.theta += theta_dot
+        self.x += distance * cos(self.theta)
+        self.y += distance * sin(self.theta)
+
+    def odom_publish(self):
+        # Get the current time message.
+        now_msg = self.get_clock().now().to_msg()
+        self.odom.header.stamp = now_msg
+        self.odom.header.frame_id = "odom_ukf"
+        self.odom.child_frame_id = "base_link"
+
+        # Set the position.
+        self.odom.pose.pose.position.x = self.x
+        self.odom.pose.pose.position.y = self.y
+
+        # Compute the orientation quaternion from the yaw (theta).
+        quat = quaternion_from_euler(0, 0, self.theta)
+        quaternion = Quaternion()
+        quaternion.x, quaternion.y, quaternion.z, quaternion.w = quat
+        self.odom.pose.pose.orientation = quaternion
+
+        # Set the velocity (twist) message.
+        self.odom.twist.twist.linear.x = self.linear_speed
+        self.odom.twist.twist.linear.y = 0.0
+        self.odom.twist.twist.linear.z = 0.0
+
+        # Publish the odometry message.
+        self.odom_pub.publish(self.odom)
+
+        # Broadcast the transform.
+        transform = TransformStamped()
+        transform.header.stamp = now_msg
+        transform.header.frame_id = "odom"
+        transform.child_frame_id = "base_link"
+        transform.transform.translation.x = self.x
+        transform.transform.translation.y = self.y
+        transform.transform.translation.z = 0.0
+        transform.transform.rotation = quaternion
+        self.br.sendTransform(transform)
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = Erp42Odom()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info('Shutting down ROS2 node')
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+if __name__ == "__main__":
+    main()

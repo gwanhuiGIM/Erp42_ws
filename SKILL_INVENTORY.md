@@ -1,0 +1,1 @@
+/home/kimkh/colcon_ws/docs/portfolio/SKILL_INVENTORY.md
