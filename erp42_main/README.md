@@ -6,20 +6,20 @@ CNU M.T.P 팀 ERP42 자율주행 대회용 최종 코드. 개인 작업 ws는 [`
 > 참고: 최상위 `README.md`가 원래 `ublox` 패키지 README(upstream 문서)를 그대로 담고 있었음.
 > 그 내용은 [`src/ublox/README.md`](src/ublox/README.md)로 옮기고 여기는 프로젝트 개요로 새로 작성함.
 
-## 담당 범위 & 핵심 참조 파일
+## 핵심 파일 & 코드 흐름
 
-이 ws는 팀이 GitHub에 공유용으로 정리해 올린 부분집합이다(왜 `src/`와 병렬로 관리되는지는 [상위 README](../README.md) "왜 두 ws를 병렬로 관리하는가" 참고). 담당 축(구현/실차 튜닝 구분)은 [`../docs/portfolio/PORTFOLIO_SOURCE.md`](../docs/portfolio/PORTFOLIO_SOURCE.md) §2가 단일 출처 — 요약:
+이 ws는 팀이 GitHub에 공유용으로 정리해 올린 부분집합이다(왜 `src/`와 병렬로 관리되는지는 [상위 README](../README.md) 참고).
 
-| 역할 | 파일 | 담당 |
-|---|---|---|
-| Localization(EKF) | `src/erp_driver/scripts/erp42_imu-gps-wheel-ekf_globalposition.py` | 팀 동료(구현) / 본인(실차 튜닝) |
-| 차선 인식 | `src/erp_driver/scripts/erp42_lanedetect.py`, `erp42_lanedetect_yolo.py`, `src/yolo_ros/` | 팀 동료(구현) / 본인(실차 튜닝) |
-| LiDAR 장애물인식 | *(패키지 자체 없음 — `src/`(개인 ws) 전용 영역, 본인 담당이지만 여긴 미포함)* | — |
-| Pathtracking | `src/erp_driver/scripts/erp42_pathtracking.py` | **본인** |
-| Command 중재(Controller) | *(파일 자체 없음 — pathtracking이 `/erp42_ctrl_cmd`를 직접 발행)* | **본인**(설계상 `src/`에만 존재) |
-| Actuation | `src/erp_driver/scripts/erp42_serial.py` | **본인** |
+| 역할 | 파일 |
+|---|---|
+| Localization(EKF) | `src/erp_driver/scripts/erp42_imu-gps-wheel-ekf_globalposition.py` |
+| 차선 인식 | `src/erp_driver/scripts/erp42_lanedetect.py`, `erp42_lanedetect_yolo.py`, `src/yolo_ros/` |
+| LiDAR 장애물인식 | *(패키지 자체 없음 — `src/`(개인 ws) 전용 영역, 여긴 미포함)* |
+| Pathtracking | `src/erp_driver/scripts/erp42_pathtracking.py` |
+| Command 중재(Controller) | *(파일 자체 없음 — pathtracking이 `/erp42_ctrl_cmd`를 직접 발행, `src/`에만 존재)* |
+| Actuation | `src/erp_driver/scripts/erp42_serial.py` |
 
-코드 흐름(이 ws 한정, 요약): `GPS/IMU/encoder → erp42_imu-gps-wheel-ekf_globalposition → erp42_pathtracking → erp42_serial`(Controller 없이 직접 발행 — `src/`와 가장 큰 아키텍처 차이). camera→차선인식 경로는 topic 불일치로 정적으로는 dead, LiDAR→pathtracking 경로는 이 ws에 publisher 자체가 없어 dead — 상세 근거는 [`../docs/portfolio/architecture.md`](../docs/portfolio/architecture.md).
+코드 흐름(이 ws 한정, 요약): `GPS/IMU/encoder → erp42_imu-gps-wheel-ekf_globalposition → erp42_pathtracking → erp42_serial`(Controller 없이 직접 발행 — `src/`와 가장 큰 아키텍처 차이). camera→차선인식 경로는 topic 불일치로 정적으로는 dead, LiDAR→pathtracking 경로는 이 ws에 publisher 자체가 없어 dead branch다.
 
 ## 패키지 구성 (모두 `src/` 하위, colcon 표준 레이아웃)
 

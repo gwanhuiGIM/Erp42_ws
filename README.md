@@ -9,7 +9,7 @@ source /opt/ros/humble/setup.bash
 colcon build --symlink-install --base-paths src --packages-select <패키지명>
 ```
 
-⚠️ 패키지 지정 없이 `src` 전체를 한 번에 빌드하면 `ament_lint_auto`/`ament_cmake_cppcheck` 미설치, `ndt_omp` 자체 버그로 일부 패키지가 실패한다 — 상세는 [`docs/decisions/0001-src-canonical-ws.md`](docs/decisions/0001-src-canonical-ws.md) 참고.
+⚠️ 패키지 지정 없이 `src` 전체를 한 번에 빌드하면 `ament_lint_auto`/`ament_cmake_cppcheck` 미설치, `ndt_omp` 자체 버그로 일부 패키지가 실패한다 — 위처럼 `--packages-select`로 개별 빌드할 것.
 
 ## 패키지 구성
 
@@ -46,11 +46,9 @@ GPS/IMU/encoder → EKF(erp42_ebimu_ekf_globalposition.py)
                 → serial(erp42_serial.py) → 액추에이터
 ```
 
-담당 축, topic 단위 배선 근거, dead branch 표는 [`docs/portfolio/architecture.md`](docs/portfolio/architecture.md)가 단일 출처. 실차 미검증·알려진 배선 이슈는 [`src/README.md`](src/README.md)에 있다.
+topic 단위 배선 근거·dead branch는 패키지별 스크립트에서 확인할 수 있다. 실차 미검증·알려진 배선 이슈는 [`src/README.md`](src/README.md)에 있다.
 
 ## 문서
 
-- 포트폴리오 자료: [`docs/portfolio/`](docs/portfolio/) — 담당 범위, 기술스택, 아키텍처 근거
 - `src/` 상세(패키지별 역할, 진입점, 알려진 이슈): [`src/README.md`](src/README.md)
-- 이 ws가 지금 형태(`src/` 단일 기준)가 된 배경·병합 이력·검증 결과: [`docs/decisions/0001-src-canonical-ws.md`](docs/decisions/0001-src-canonical-ws.md)
 - `erp42_main/`: 팀 협업 이력 참고용 자료(과거 팀 정리본) — 포트폴리오 기준 소스 아님

@@ -2,20 +2,20 @@
 
 ERP42 자율주행 개발 워크스페이스. 2026-09-18 병합으로 이 `src/`가 **포트폴리오 공개용 단일 기준 ws**가 됐다 — `erp42_main/`(팀 정리본)과의 병합 이력·차이점은 [상위 README](../README.md)의 "병합 현황" 섹션이 단일 출처다. `erp42_main/`은 삭제하지 않고 협업 이력 참고용으로만 남아 있다(더 이상 "최종본"이 아님).
 
-## 담당 범위 & 핵심 참조 파일
+## 핵심 파일 & 코드 흐름
 
-`erp_driver/scripts/`가 실질적인 진입점이다. 담당 축(구현/실차 튜닝 구분)은 [`../docs/portfolio/PORTFOLIO_SOURCE.md`](../docs/portfolio/PORTFOLIO_SOURCE.md) §2가 단일 출처 — 요약:
+`erp_driver/scripts/`가 실질적인 진입점이다.
 
-| 역할 | 파일 | 담당 |
-|---|---|---|
-| Localization(EKF) | `erp_driver/scripts/erp42_ebimu_ekf_globalposition.py` | 팀 동료(구현) / 본인(실차 튜닝, EBIMU 세대교체) |
-| 차선 인식 | `erp_driver/scripts/erp42_lanedetect.py`, `erp42_lanedetect_yolo.py`(+`yolo_ros/`) | 팀 동료(구현) / 본인(실차 튜닝) |
-| LiDAR 장애물인식 | `pcl_clustering_py/`, `cluster_bev/`, `erp_driver/scripts/archive/0724_*`~`0822_*`(dead branch, 실험 이력) | **본인** |
-| Pathtracking | `erp_driver/scripts/erp42_pathtracking.py` | **본인** |
-| Command 중재(Controller) | `erp_driver/scripts/erp42_controller.py` | **본인** |
-| Actuation | `erp_driver/scripts/erp42_serial.py` | **본인** |
+| 역할 | 파일 |
+|---|---|
+| Localization(EKF) | `erp_driver/scripts/erp42_ebimu_ekf_globalposition.py` |
+| 차선 인식 | `erp_driver/scripts/erp42_lanedetect.py`, `erp42_lanedetect_yolo.py`(+`yolo_ros/`) |
+| LiDAR 장애물인식 | `pcl_clustering_py/`, `cluster_bev/`, `erp_driver/scripts/archive/0724_*`~`0822_*`(dead branch, 실험 이력) |
+| Pathtracking | `erp_driver/scripts/erp42_pathtracking.py` |
+| Command 중재(Controller) | `erp_driver/scripts/erp42_controller.py` |
+| Actuation | `erp_driver/scripts/erp42_serial.py` |
 
-코드 흐름(요약): `GPS/IMU/encoder → erp42_ebimu_ekf_globalposition → erp42_pathtracking → erp42_controller(lane/path 중재) → erp42_serial`. camera→차선인식, LiDAR→pathtracking 경로는 topic 불일치/미발행 조건으로 정적으로는 dead — 상세 근거는 [`../docs/portfolio/architecture.md`](../docs/portfolio/architecture.md).
+코드 흐름(요약): `GPS/IMU/encoder → erp42_ebimu_ekf_globalposition → erp42_pathtracking → erp42_controller(lane/path 중재) → erp42_serial`. camera→차선인식, LiDAR→pathtracking 경로는 topic 불일치/미발행 조건으로 정적으로는 dead branch다.
 
 ### ⚠️ 병합 후 알려진 정합성 문제 (2026-09-18, codex 교차검증)
 main에만 있던 `erp42_lanedetect.py`를 이 ws의 Controller 아키텍처에 새로 편입하면서 드러난 배선 문제:
