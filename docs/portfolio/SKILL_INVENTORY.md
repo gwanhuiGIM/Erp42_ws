@@ -11,7 +11,7 @@
 | [시뮬] | erp42_main | `[src root]` ● clang/libc++ extension용 `RTLD_GLOBAL`/`RTLD_LAZY` ABI bridge | `rosbag2csv.py:26-33` | Docker/ABI 격리 이론(컨테이너 네임스페이스, ROS distro 간 ABI 비호환 원인) |
 | [시뮬] | erp42_main | `yolo_ros` ● official ROS image 기반 isolated Docker workspace | `Dockerfile:1-7` | Docker/ABI 격리 이론(컨테이너 네임스페이스, ROS distro 간 ABI 비호환 원인) |
 | [시뮬] | erp42_main | `yolo_ros` ○ device·model resource를 lifecycle로 구성·해제하는 inference runtime | `yolo_ros/yolo_ros/yolo_node.py:54-70,130-179` | Docker/ABI 격리 이론(컨테이너 네임스페이스, ROS distro 간 ABI 비호환 원인) |
-| [비전] | src | `erp_driver` ● HSV mask + Canny/Hough lane 검출 | `src/erp_driver/scripts/0702_erp42_lanedetect.py:58-63,111-117,129-134` | 고전 vision(HSV/Hough) vs 딥러닝(YOLO) 트레이드오프, 카메라 캘리브레이션 |
+| [비전] | src | `erp_driver` ● HSV mask + Canny/Hough lane 검출 | `src/erp_driver/scripts/archive/0702_erp42_lanedetect.py:58-63,111-117,129-134` | 고전 vision(HSV/Hough) vs 딥러닝(YOLO) 트레이드오프, 카메라 캘리브레이션 |
 | [비전] | src | `usb_cam` ○ Isaac Sim scene의 hand marker/target 반영 | `src/usb_cam/launch/Pick_Tray_SA.py:413,442,554-558,606,622,720` | ERP42 프로젝트와 무관한 별개 Isaac Sim 앱(PORTFOLIO_MAP.md §6-D) — 포트폴리오 학습 로드맵 대상 아님 |
 | [비전] | src | `usb_cam` ○ camera image/camera_info remapping schema | `src/usb_cam/launch/camera_config.py:34,42-43,54-64` | 고전 vision(HSV/Hough) vs 딥러닝(YOLO) 트레이드오프, 카메라 캘리브레이션 |
 | [비전] | src | `Yolo_pt` ○ YOLO binary weight artifact(`best.pt`, `last.pt`) 보관 | `src/Yolo_pt/best.pt` — line anchor 없음(§4 명시) | 고전 vision(HSV/Hough) vs 딥러닝(YOLO) 트레이드오프, 카메라 캘리브레이션 |
@@ -22,7 +22,7 @@
 | [비전] | erp42_main | `yolo_ros` ● YOLO/YOLOWorld load·fuse·parameterized inference | `yolo_ros/yolo_ros/yolo_node.py:30-35,72,130-143,327-349` | 고전 vision(HSV/Hough) vs 딥러닝(YOLO) 트레이드오프, 카메라 캘리브레이션 |
 | [비전] | erp42_main | `yolo_ros` ○ YOLO input image remapping과 optional tracking/3D/debug wiring | `yolo_bringup/launch/yolo.launch.py:137-150,203-207,229-254,256-264` | 고전 vision(HSV/Hough) vs 딥러닝(YOLO) 트레이드오프, 카메라 캘리브레이션 |
 | [좌표계] | src | `ebimu_pkg` ○ EBIMU serial line을 ROS message로 변환 | `src/ebimu_pkg/ebimu_pkg/ebimu_publisher.py:13-16,30,37` | 좌표변환 수학(quaternion, geodetic↔ENU 변환 유도) — 대부분 pymap3d/tf_transformations가 대신 계산 |
-| [좌표계] | src | `erp_driver` ● quaternion↔Euler + geodetic→ENU 선형 EKF | `src/erp_driver/scripts/1024_EBIMU_EKF.py:8,98,126,133,179` | 칼만필터 이론(선형 EKF vs UKF sigma-point) — 현재 UKF가 아닌 선형 EKF임을 mission-cards.md에서 이미 확인, sigma-point 확장을 공부하면 보고서 주장과 코드를 맞출 수 있음 |
+| [좌표계] | src | `erp_driver` ● quaternion↔Euler + geodetic→ENU 선형 EKF | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py:8,98,126,133,179` | 칼만필터 이론(선형 EKF vs UKF sigma-point) — 현재 UKF가 아닌 선형 EKF임을 mission-cards.md에서 이미 확인, sigma-point 확장을 공부하면 보고서 주장과 코드를 맞출 수 있음 |
 | [좌표계] | src | `erp_driver` ○ odometry yaw 기반 heading error 계산 | `src/erp_driver/scripts/erp42_pathtracking.py:122,175` | 좌표변환 수학(quaternion, geodetic↔ENU 변환 유도) — 대부분 pymap3d/tf_transformations가 대신 계산 |
 | [좌표계] | src | `erp_driver` ○ GPS waypoint geodetic→ENU 변환 | `src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py:41,51` | 좌표변환 수학(quaternion, geodetic↔ENU 변환 유도) — 대부분 pymap3d/tf_transformations가 대신 계산 |
 | [좌표계] | src | `hdl_global_localization` ○ localization용 legacy Noetic container recipe | `src/hdl_global_localization/docker/noetic/Dockerfile:1,9-17` | vendor/upstream 패키지 — 개인 기여 아님(§0-1 경계). 학습 여지: 좌표변환 수학(quaternion, geodetic↔ENU 변환 유도) — 대부분 pymap3d/tf_transformations가 대신 계산 |
@@ -51,11 +51,11 @@
 | [좌표계] | erp42_main | `waypoint` ○ GPS waypoint dataset | `waypoints_real_w2toe4_gps.xls` — text line anchor 없음(§4 명시) | binary 데이터 — 좌표계 학습 여지는 이를 소비하는 pymap3d 변환 코드 쪽에서 다룸 |
 | [통신] | src | `cluster_bev` ● SensorDataQoS PointCloud2 subscribe/publish | `src/cluster_bev/src/cluster_bev_node.cpp:26-27,43-49` | point cloud 다운샘플링 이론(voxel grid)과 RANSAC 평면 적합 수학 — PCL이 대신 계산하는 부분을 직접 유도해보면 심화 |
 | [통신] | src | `ebimu_pkg` ● pyserial 115200 baud→`ebimu_data` publisher | `src/ebimu_pkg/ebimu_pkg/ebimu_publisher.py:13-16,30,37` | ROS2 QoS 프로파일 이론(Reliable/BestEffort, durability)과 이 프로젝트의 topic mismatch 사례 비교 |
-| [통신] | src | `erp_driver` ○ EBIMU·GPS·wheel subscriptions→`/odom_ekf` output | `src/erp_driver/scripts/1024_EBIMU_EKF.py:61-64,121,141` | 칼만필터 이론(선형 EKF vs UKF sigma-point) — 현재 UKF가 아닌 선형 EKF임을 mission-cards.md에서 이미 확인, sigma-point 확장을 공부하면 보고서 주장과 코드를 맞출 수 있음 |
+| [통신] | src | `erp_driver` ○ EBIMU·GPS·wheel subscriptions→`/odom_ekf` output | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py:61-64,121,141` | 칼만필터 이론(선형 EKF vs UKF sigma-point) — 현재 UKF가 아닌 선형 EKF임을 mission-cards.md에서 이미 확인, sigma-point 확장을 공부하면 보고서 주장과 코드를 맞출 수 있음 |
 | [통신] | src | `erp_driver` ○ odometry·Path·LiDAR command 결합 | `src/erp_driver/scripts/erp42_pathtracking.py:142-145,170-171,195-201` | ROS2 QoS 프로파일 이론(Reliable/BestEffort, durability)과 이 프로젝트의 topic mismatch 사례 비교 |
-| [통신] | src | `erp_driver` ○ lane/path command timer selector | `src/erp_driver/scripts/0702_erp42_controller.py:16-24,37-55` | ROS2 QoS 프로파일 이론(Reliable/BestEffort, durability)과 이 프로젝트의 topic mismatch 사례 비교 |
-| [통신] | src | `erp_driver` ○ `/usb_cam_0/image_raw`→`/erp42_ctrl_cmd/lane` | `src/erp_driver/scripts/0702_erp42_lanedetect.py:366-368` | ROS2 QoS 프로파일 이론(Reliable/BestEffort, durability)과 이 프로젝트의 topic mismatch 사례 비교 |
-| [통신] | src | `erp_driver` ○ `/velodyne_points`→`/erp42_ctrl_cmd/lidar` | `src/erp_driver/scripts/0822_Obstacle_3d.py:14,17` | 센서 데이터 흐름 설계(ROI 필터링→판단 파이프라인) |
+| [통신] | src | `erp_driver` ○ lane/path command timer selector | `src/erp_driver/scripts/erp42_controller.py:16-24,37-55` | ROS2 QoS 프로파일 이론(Reliable/BestEffort, durability)과 이 프로젝트의 topic mismatch 사례 비교 |
+| [통신] | src | `erp_driver` ○ `/usb_cam_0/image_raw`→`/erp42_ctrl_cmd/lane` | `src/erp_driver/scripts/archive/0702_erp42_lanedetect.py:366-368` | ROS2 QoS 프로파일 이론(Reliable/BestEffort, durability)과 이 프로젝트의 topic mismatch 사례 비교 |
+| [통신] | src | `erp_driver` ○ `/velodyne_points`→`/erp42_ctrl_cmd/lidar` | `src/erp_driver/scripts/archive/0822_Obstacle_3d.py:14,17` | 센서 데이터 흐름 설계(ROI 필터링→판단 파이프라인) |
 | [통신] | src | `erp_driver` ● `/erp42_ctrl_cmd`↔serial↔`/erp42_status` 40 Hz bridge | `src/erp_driver/scripts/erp42_serial.py:24-27,31,42-44,56-57` | 시리얼 프로토콜 설계(체크섬, 프레이밍) — 현재 패킷 포맷의 오류검출 여부 확인 필요 |
 | [통신] | src | `erp_driver` ○ Excel waypoint→`/waypoints_path1` Path publish | `src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py:19,41,51` | ROS2 QoS 프로파일 이론(Reliable/BestEffort, durability)과 이 프로젝트의 topic mismatch 사례 비교 |
 | [통신] | src | `erp_interfaces` ● ERP42 command/status wire fields | `src/erp_interfaces/msg/ErpCmdMsg.msg:1-5`; `src/erp_interfaces/msg/ErpStatusMsg.msg:1-8` | ROS2 QoS 프로파일 이론(Reliable/BestEffort, durability)과 이 프로젝트의 topic mismatch 사례 비교 |
@@ -107,8 +107,8 @@
 | [노드설계] | erp42_main | `yolo_ros` ● `LifecycleNode` configure/activate transitions | `yolo_ros/yolo_ros/yolo_node.py:49-52,74-128,130-159` | ROS2 Executor/CallbackGroup 동시성 모델 — 이 구간엔 미적용, 학습 여지 큼 |
 | [노드설계] | erp42_main | `yolo_ros` ○ conditional YOLO pipeline node orchestration | `yolo_bringup/launch/yolo.launch.py:203-207,229-254,256-264` | ROS2 Executor/CallbackGroup 동시성 모델 — 이 구간엔 미적용, 학습 여지 큼 |
 | [모션플래닝] | src | `erp_driver` ● nearest/lookahead waypoint + heading-error P control + alpha blending | `src/erp_driver/scripts/erp42_pathtracking.py:84,122,128,161,175,184-186` | P control 이론(정상상태 오차, 이득 튜닝)과 pure-pursuit/Stanley 등 곡률 기반 조향법 비교 — 지금은 heading error P + 저역통과뿐, 곡률/속도 연동 없음 |
-| [모션플래닝] | src | `erp_driver` ○ lane candidate 기반 steering command | `src/erp_driver/scripts/0702_erp42_lanedetect.py:58-63,111-117,129-134,366-368` | 경로추종 알고리즘 비교(pure-pursuit, Stanley, MPC) — 현재 P제어+블렌딩뿐 |
-| [모션플래닝] | src | `erp_driver` ○ ROI obstacle 판단 기반 brake command experiment | `src/erp_driver/scripts/0822_Obstacle_3d.py:14,17,69,117` | 장애물 회피 알고리즘 비교(potential field, DWA) — 지금은 ROI 임계값 기반 단순 정지/서행뿐 |
+| [모션플래닝] | src | `erp_driver` ○ lane candidate 기반 steering command | `src/erp_driver/scripts/archive/0702_erp42_lanedetect.py:58-63,111-117,129-134,366-368` | 경로추종 알고리즘 비교(pure-pursuit, Stanley, MPC) — 현재 P제어+블렌딩뿐 |
+| [모션플래닝] | src | `erp_driver` ○ ROI obstacle 판단 기반 brake command experiment | `src/erp_driver/scripts/archive/0822_Obstacle_3d.py:14,17,69,117` | 장애물 회피 알고리즘 비교(potential field, DWA) — 지금은 ROI 임계값 기반 단순 정지/서행뿐 |
 | [모션플래닝] | src | `erp_driver` ○ waypoint list를 ENU `Path`로 구성 | `src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py:19,41,51` | 경로추종 알고리즘 비교(pure-pursuit, Stanley, MPC) — 현재 P제어+블렌딩뿐 |
 | [모션플래닝] | src | `usb_cam` ○ hand target/mode를 simulation loop의 M0609 target에 반영 | `src/usb_cam/launch/Pick_Tray_SA.py:413,442,554-558,606,622,720` | ERP42 프로젝트와 무관한 별개 Isaac Sim 앱(PORTFOLIO_MAP.md §6-D) — 포트폴리오 학습 로드맵 대상 아님 |
 | [모션플래닝] | erp42_main | `erp_driver` ○ fused odometry를 waypoint navigation에 제공 | `scripts/erp42_imu-gps-wheel-ekf_globalposition.py:218-228` | 칼만필터 이론(공분산 가중 보정의 수학적 근거) — 팀 동료 담당 구간이라 코드 읽기 수준의 이해 |
@@ -117,9 +117,9 @@
 | [모션플래닝] | erp42_main | `erp_driver` ○ lane fitting 결과를 steering에 연결 | `scripts/erp42_lanedetect.py:115-124,129-136,138-145,324-342` | 경로추종 알고리즘 비교(pure-pursuit, Stanley, MPC) — 현재 P제어+블렌딩뿐 |
 | [모션플래닝] | erp42_main | `erp_driver` ○ bbox 중심 기반 P steering(기동 실패 경로) | `scripts/erp42_lanedetect_yolo.py:20-24,29-88` | 경로추종 알고리즘 비교(pure-pursuit, Stanley, MPC) — 현재 P제어+블렌딩뿐 |
 | [모션플래닝] | erp42_main | `waypoint` ○ GPS waypoint dataset | `waypoints_real_w2toe4_gps.xls` — text line anchor 없음(§4 명시) | binary 데이터 — 좌표계 학습 여지는 이를 소비하는 pymap3d 변환 코드 쪽에서 다룸 |
-| [상태관리] | src | `erp_driver` ○ EKF filter state/covariance·sensor state 갱신 | `src/erp_driver/scripts/1024_EBIMU_EKF.py:61-64,121,133,141` | 칼만필터 이론(선형 EKF vs UKF sigma-point) — 현재 UKF가 아닌 선형 EKF임을 mission-cards.md에서 이미 확인, sigma-point 확장을 공부하면 보고서 주장과 코드를 맞출 수 있음 |
+| [상태관리] | src | `erp_driver` ○ EKF filter state/covariance·sensor state 갱신 | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py:61-64,121,133,141` | 칼만필터 이론(선형 EKF vs UKF sigma-point) — 현재 UKF가 아닌 선형 EKF임을 mission-cards.md에서 이미 확인, sigma-point 확장을 공부하면 보고서 주장과 코드를 맞출 수 있음 |
 | [상태관리] | src | `erp_driver` ○ current waypoint index·goal 진행 상태 | `src/erp_driver/scripts/erp42_pathtracking.py:84,128,142-145,161,170-171` | 명시적 FSM 설계(전이 매트릭스, 가드) — 현재 if/elif 수준 |
-| [상태관리] | src | `erp_driver` ● lane 우선 selector + freshness timeout | `src/erp_driver/scripts/0702_erp42_controller.py:37-46` | 상태머신 설계 이론(전이 매트릭스, 가드 조건 명시화) — 지금은 if/elif 2단계뿐, FSM 라이브러리(SMACH 등) 비교 학습 여지 |
+| [상태관리] | src | `erp_driver` ● lane 우선 selector + freshness timeout | `src/erp_driver/scripts/erp42_controller.py:37-46` | 상태머신 설계 이론(전이 매트릭스, 가드 조건 명시화) — 지금은 if/elif 2단계뿐, FSM 라이브러리(SMACH 등) 비교 학습 여지 |
 | [상태관리] | src | `erp_driver` ○ 최신 serial command·status 처리 | `src/erp_driver/scripts/erp42_serial.py:24-31,42-44,56-57` | 명시적 FSM 설계(전이 매트릭스, 가드) — 현재 if/elif 수준 |
 | [상태관리] | src | `erp_interfaces` ○ e-stop·gear·speed·steer·brake/encoder state contract | `src/erp_interfaces/msg/ErpCmdMsg.msg:1-5`; `src/erp_interfaces/msg/ErpStatusMsg.msg:1-8` | 명시적 FSM 설계(전이 매트릭스, 가드) — 현재 if/elif 수준 |
 | [상태관리] | src | `usb_cam` ○ `HOME`·`TRACKING` mode 반영 | `src/usb_cam/launch/Pick_Tray_SA.py:251-266,554-558,606,622,720` | ERP42 프로젝트와 무관한 별개 Isaac Sim 앱(PORTFOLIO_MAP.md §6-D) — 포트폴리오 학습 로드맵 대상 아님 |
@@ -140,8 +140,8 @@
 | [상태관리] | erp42_main | `yolo_ros` ● enable/model/device/inference params + lifecycle resource state | `yolo_ros/yolo_ros/yolo_node.py:54-70,77-112,130-179` | 명시적 FSM 설계(전이 매트릭스, 가드) — 현재 if/elif 수준 |
 | [상태관리] | erp42_main | `yolo_ros` ○ optional tracking node 조건부 구성 | `yolo_bringup/launch/yolo.launch.py:229-254,256-264` | 명시적 FSM 설계(전이 매트릭스, 가드) — 현재 if/elif 수준 |
 | [안전] | src | `erp_driver` ● final waypoint `brake=155` stop + dead LiDAR branch | `src/erp_driver/scripts/erp42_pathtracking.py:142-145,170-171,195-201` | fail-safe/워치독 설계, ISO 26262류 안전 등급 개념 |
-| [안전] | src | `erp_driver` ● invalid inputs fallback `brake=155` full brake | `src/erp_driver/scripts/0702_erp42_controller.py:48-58` | fail-safe 설계 패턴(다중 방어선, 워치독) — 지금은 단일 fallback뿐 |
-| [안전] | src | `erp_driver` ● obstacle branch `brake=200`/clear `brake=0` | `src/erp_driver/scripts/0822_Obstacle_3d.py:14,17,69,117` | 장애물 회피 알고리즘 비교(potential field, DWA) — 지금은 ROI 임계값 기반 단순 정지/서행뿐 |
+| [안전] | src | `erp_driver` ● invalid inputs fallback `brake=155` full brake | `src/erp_driver/scripts/erp42_controller.py:48-58` | fail-safe 설계 패턴(다중 방어선, 워치독) — 지금은 단일 fallback뿐 |
+| [안전] | src | `erp_driver` ● obstacle branch `brake=200`/clear `brake=0` | `src/erp_driver/scripts/archive/0822_Obstacle_3d.py:14,17,69,117` | 장애물 회피 알고리즘 비교(potential field, DWA) — 지금은 ROI 임계값 기반 단순 정지/서행뿐 |
 | [안전] | src | `erp_driver` ○ serial packet의 brake field encode/decode | `src/erp_driver/scripts/erp42_serial.py:31,56-57` | 안전 인터록 설계(e-stop/brake 신호의 이중화·워치독) |
 | [안전] | src | `erp_interfaces` ○ `e_stop`·`brake` command/status fields | `src/erp_interfaces/msg/ErpCmdMsg.msg:1-5`; `src/erp_interfaces/msg/ErpStatusMsg.msg:1-8` | fail-safe/워치독 설계, ISO 26262류 안전 등급 개념 |
 | [안전] | src | `usb_cam` ○ simulation mode/target control 접점(ERP42와 별도 앱) | `src/usb_cam/launch/Pick_Tray_SA.py:251-266,554-558,606,622,720` | ERP42 프로젝트와 무관한 별개 Isaac Sim 앱(PORTFOLIO_MAP.md §6-D) — 포트폴리오 학습 로드맵 대상 아님 |
@@ -183,8 +183,8 @@
 | [인프라] | erp42_main | `yolo_ros` ● model/device params·remapping·optional tracking launch wiring | `yolo_bringup/launch/yolo.launch.py:229-254,256-264` | launch 시스템 설계(파라미터 오버라이드, composable node) |
 | [데이터] | src | `cluster_bev` ○ PointCloud2 voxel·RANSAC·clustering output | `src/cluster_bev/src/cluster_bev_node.cpp:26-27,43-49` | point cloud 다운샘플링 이론(voxel grid)과 RANSAC 평면 적합 수학 — PCL이 대신 계산하는 부분을 직접 유도해보면 심화 |
 | [데이터] | src | `ebimu_pkg` ○ serial `readline()`→String sensor data | `src/ebimu_pkg/ebimu_pkg/ebimu_publisher.py:13-16,30,37` | 데이터 파이프라인 재현성(로깅 스키마, 테스트 커버리지) |
-| [데이터] | src | `erp_driver` ○ GPS/IMU/wheel input의 선형 EKF state output | `src/erp_driver/scripts/1024_EBIMU_EKF.py:61-64,121,126,133,141` | 칼만필터 이론(선형 EKF vs UKF sigma-point) — 현재 UKF가 아닌 선형 EKF임을 mission-cards.md에서 이미 확인, sigma-point 확장을 공부하면 보고서 주장과 코드를 맞출 수 있음 |
-| [데이터] | src | `erp_driver` ○ PointCloud2 ROI obstacle 판단 | `src/erp_driver/scripts/0822_Obstacle_3d.py:14,17,69,117` | 장애물 회피 알고리즘 비교(potential field, DWA) — 지금은 ROI 임계값 기반 단순 정지/서행뿐 |
+| [데이터] | src | `erp_driver` ○ GPS/IMU/wheel input의 선형 EKF state output | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py:61-64,121,126,133,141` | 칼만필터 이론(선형 EKF vs UKF sigma-point) — 현재 UKF가 아닌 선형 EKF임을 mission-cards.md에서 이미 확인, sigma-point 확장을 공부하면 보고서 주장과 코드를 맞출 수 있음 |
+| [데이터] | src | `erp_driver` ○ PointCloud2 ROI obstacle 판단 | `src/erp_driver/scripts/archive/0822_Obstacle_3d.py:14,17,69,117` | 장애물 회피 알고리즘 비교(potential field, DWA) — 지금은 ROI 임계값 기반 단순 정지/서행뿐 |
 | [데이터] | src | `erp_driver` ● Excel waypoint parse→ENU Path | `src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py:19,41,51,86` | 데이터 파이프라인 재현성(로깅 스키마, 테스트 커버리지) |
 | [데이터] | src | `ntrip_client` ○ NMEA/GPS→RTCM correction stream | `src/ntrip_client/scripts/ntrip_ros_base.py:61-78,100-104,163-182` | 데이터 파이프라인 재현성(로깅 스키마, 테스트 커버리지) |
 | [데이터] | src | `pcl_clustering_py` ○ PointCloud2 RANSAC·Euclidean cluster colorized output | `src/pcl_clustering_py/pcl_clustering_py/euclidean_cluster_node.py:41-44,56-84,93-123` | 클러스터링 결과를 실제 장애물 리스트로 변환해 pathtracking에 연결하는 인지-판단 통합 설계(현재 미연결 — §9 Future Work) |

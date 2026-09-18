@@ -16,17 +16,17 @@
 
 | 라이브러리/프레임워크 | 버전(확인 가능한 경우, 없으면 '미기재') | 사용 파일:라인(최소 1개 예시) | src 또는 erp42_main 중 어디 있는지 | 확인 상태(코드로 확인됨 / package.xml에만 선언되고 미사용 / 보고서에만 있고 코드엔 없음) |
 |---|---|---|---|---|
-| ROS 2 Python client (`rclpy`) | 미기재 | `src/erp_driver/scripts/1024_EBIMU_EKF.py:2`; `erp42_main/src/erp_driver/scripts/erp42_pathtracking.py:3` | 양쪽 | **코드로 확인됨 (metadata 미선언)** — `erp_driver/package.xml`은 `rclcpp`만 선언하고 `rclpy`는 선언하지 않음 |
+| ROS 2 Python client (`rclpy`) | 미기재 | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py:2`; `erp42_main/src/erp_driver/scripts/erp42_pathtracking.py:3` | 양쪽 | **코드로 확인됨 (metadata 미선언)** — `erp_driver/package.xml`은 `rclcpp`만 선언하고 `rclpy`는 선언하지 않음 |
 | ROS 2 C++ client (`rclcpp`) | 미기재 | `src/erp_driver/package.xml:8`; `erp42_main/src/erp_driver/package.xml:8` | 양쪽 | **package.xml에만 선언되고 미사용** (`.py` import 기준; C++ package dependency) |
-| ROS 2 interface/message stack (`sensor_msgs`, `geometry_msgs`, `nav_msgs`, `std_msgs`) | 미기재 | `src/erp_driver/scripts/1024_EBIMU_EKF.py:4`; `erp42_main/src/erp_driver/scripts/erp42_pathtracking.py:6` | 양쪽 | **코드로 확인됨** — 단 `erp_driver/package.xml`에는 실제 import 중 `geometry_msgs`, `nav_msgs`가 미선언 |
-| `erp_interfaces` | 0.0.1 | `src/erp_driver/scripts/1024_EBIMU_EKF.py:9`; `erp42_main/src/erp_driver/package.xml:11` | 양쪽 | **코드로 확인됨** |
-| NumPy | `<2` (`yolo_ros/requirements.txt` 기준) | `src/erp_driver/scripts/1024_EBIMU_EKF.py:11`; `erp42_main/src/erp_driver/scripts/ByteHandler.py:4` | 양쪽 | **코드로 확인됨 (metadata 미선언)** — `erp_driver`와 `pcl_clustering_py`의 `package.xml/setup.py`에는 없음; `<2` 제약은 팀본 `yolo_ros`에만 별도 기재 |
-| OpenCV (`cv2`) | `>=4.8.1.78` (`yolo_ros/requirements.txt` 기준) | `src/erp_driver/scripts/0702_erp42_lanedetect.py:6`; `erp42_main/src/yolo_ros/yolo_ros/yolo_ros/yolo_node.py:17` | 양쪽 | **코드로 확인됨 (metadata 일부 미선언)** — `erp_driver`에는 미선언, `yolo_ros`는 별도 requirements에만 `opencv-python` 기재 |
-| `cv_bridge` | 미기재 | `src/erp_driver/scripts/0702_erp42_lanedetect.py:8`; `erp42_main/src/yolo_ros/yolo_ros/yolo_ros/yolo_node.py:19` | 양쪽 | **코드로 확인됨 (metadata 일부 미선언)** — `usb_cam`/`yolo_ros`에는 선언됐지만 `erp_driver`에는 없음 |
-| scikit-learn (`LinearDiscriminantAnalysis`, `DBSCAN`) | 미기재 | `src/erp_driver/scripts/0822_Lam_ObtAvo.py:12`; `erp42_main/src/erp_driver/scripts/claude_lanedetect.py:3` | 양쪽 | **코드로 확인됨 (metadata 미선언)** |
-| Matplotlib | 미기재 | `src/erp_driver/scripts/0702_erp42_lanedetect.py:12` | src | **코드로 확인됨 (metadata 미선언)** |
+| ROS 2 interface/message stack (`sensor_msgs`, `geometry_msgs`, `nav_msgs`, `std_msgs`) | 미기재 | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py:4`; `erp42_main/src/erp_driver/scripts/erp42_pathtracking.py:6` | 양쪽 | **코드로 확인됨** — 단 `erp_driver/package.xml`에는 실제 import 중 `geometry_msgs`, `nav_msgs`가 미선언 |
+| `erp_interfaces` | 0.0.1 | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py:9`; `erp42_main/src/erp_driver/package.xml:11` | 양쪽 | **코드로 확인됨** |
+| NumPy | `<2` (`yolo_ros/requirements.txt` 기준) | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py:11`; `erp42_main/src/erp_driver/scripts/ByteHandler.py:4` | 양쪽 | **코드로 확인됨 (metadata 미선언)** — `erp_driver`와 `pcl_clustering_py`의 `package.xml/setup.py`에는 없음; `<2` 제약은 팀본 `yolo_ros`에만 별도 기재 |
+| OpenCV (`cv2`) | `>=4.8.1.78` (`yolo_ros/requirements.txt` 기준) | `src/erp_driver/scripts/archive/0702_erp42_lanedetect.py:6`; `erp42_main/src/yolo_ros/yolo_ros/yolo_ros/yolo_node.py:17` | 양쪽 | **코드로 확인됨 (metadata 일부 미선언)** — `erp_driver`에는 미선언, `yolo_ros`는 별도 requirements에만 `opencv-python` 기재 |
+| `cv_bridge` | 미기재 | `src/erp_driver/scripts/archive/0702_erp42_lanedetect.py:8`; `erp42_main/src/yolo_ros/yolo_ros/yolo_ros/yolo_node.py:19` | 양쪽 | **코드로 확인됨 (metadata 일부 미선언)** — `usb_cam`/`yolo_ros`에는 선언됐지만 `erp_driver`에는 없음 |
+| scikit-learn (`LinearDiscriminantAnalysis`, `DBSCAN`) | 미기재 | `src/erp_driver/scripts/archive/0822_Lam_ObtAvo.py:12`; `erp42_main/src/erp_driver/scripts/claude_lanedetect.py:3` | 양쪽 | **코드로 확인됨 (metadata 미선언)** |
+| Matplotlib | 미기재 | `src/erp_driver/scripts/archive/0702_erp42_lanedetect.py:12` | src | **코드로 확인됨 (metadata 미선언)** |
 | pandas | 미기재 | `src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py:5`; `erp42_main/src/rosbag_convert_clean_py/gps_convert.py:2` | 양쪽 | **코드로 확인됨 (metadata 미선언)** |
-| pymap3d | 미기재 | `src/erp_driver/scripts/1024_EBIMU_EKF.py:12`; `erp42_main/src/erp_driver/scripts/erp42_imu-gps-wheel-ekf_globalposition.py:11` | 양쪽 | **코드로 확인됨 (metadata 미선언)** |
+| pymap3d | 미기재 | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py:12`; `erp42_main/src/erp_driver/scripts/erp42_imu-gps-wheel-ekf_globalposition.py:11` | 양쪽 | **코드로 확인됨 (metadata 미선언)** |
 | pyserial (`serial`; ROS dependency `python3-serial`) | 미기재 | `src/ebimu_pkg/ebimu_pkg/ebimu_publisher.py:10`; `erp42_main/src/ntrip_client/src/ntrip_client/ntrip_serial_device.py:5` | 양쪽 | **코드로 확인됨 (metadata 일부 미선언)** — `ntrip_client`에는 선언됐지만 `erp_driver`와 `ebimu_pkg`에는 없음 |
 | SciPy | 미기재 | `src/hdl_localization/scripts/plot_status.py:7` | src | **코드로 확인됨 (metadata 미선언)** |
 | Python-PCL (`pcl`) | 미기재 | `src/pcl_clustering_py/pcl_clustering_py/euclidean_cluster_node.py:8` | src | **코드로 확인됨 (metadata 미선언)** — package에는 `rclpy`, `sensor_msgs`만 runtime 선언 |
@@ -43,7 +43,7 @@
 | Pydantic | 미기재 | `src/usb_cam/launch/camera_config.py:34`; `erp42_main/src/usb_cam/package.xml:40` | 양쪽 | **코드로 확인됨** (`python3-pydantic` 선언과 import 일치) |
 | PyYAML (`yaml`) | 미기재 | `src/robot_localization/launch/ekf.launch.py:20`; `erp42_main/src/ublox_gps/launch/ublox_gps_node-composed-launch.py:43` | 양쪽 | **코드로 확인됨 (metadata 미선언)** — `yaml-cpp`/`yaml_cpp_vendor`는 Python `yaml`과 다른 dependency |
 | rosbag2 Python API (`rosbag2_py`) | 미기재 | `erp42_main/src/rosbag2csv.py:33` | erp42_main | **코드로 확인됨 (metadata 미선언)** — 이 root-level script를 소유하는 package metadata가 없음 |
-| `tf_transformations` | 미기재 | `src/erp_driver/scripts/1024_EBIMU_EKF.py:8`; `erp42_main/src/erp_driver/scripts/erp42_imu-gps-wheel-ekf_globalposition.py:7` | 양쪽 | **코드로 확인됨 (metadata 미선언)** |
+| `tf_transformations` | 미기재 | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py:8`; `erp42_main/src/erp_driver/scripts/erp42_imu-gps-wheel-ekf_globalposition.py:7` | 양쪽 | **코드로 확인됨 (metadata 미선언)** |
 | Ultralytics | 8.3.91 | `erp42_main/src/yolo_ros/yolo_ros/yolo_ros/yolo_node.py:31`; `erp42_main/src/yolo_ros/requirements.txt:4` | erp42_main | **코드로 확인됨 (package.xml/setup.py 미선언)** — 별도 requirements에만 pin |
 | PyTorch (`torch`) | 미기재 | `erp42_main/src/yolo_ros/yolo_ros/yolo_ros/yolo_node.py:30` | erp42_main | **코드로 확인됨 (metadata 미선언)** — `package.xml`, `setup.py`, 별도 requirements 모두 직접 선언 없음 |
 | YOLO ROS 2 wrapper (`yolo_ros`, `yolo_msgs`, `yolo_bringup`) | 4.2.0 | `erp42_main/src/yolo_ros/yolo_ros/package.xml:5`; `erp42_main/src/yolo_ros/yolo_ros/setup.py:22` | erp42_main | **코드로 확인됨** |
@@ -53,7 +53,7 @@
 | `tf2_ros` | 미기재 | `erp42_main/src/yolo_ros/yolo_ros/yolo_ros/detect_3d_node.py:32` | erp42_main | **코드로 확인됨 (yolo_ros metadata 미선언)** |
 | Isaac Sim (`isaacsim`, `omni`, `pxr`) | 미기재 | `src/usb_cam/launch/Pick_Tray_SA.py:3`; `src/usb_cam/launch/Pick_Tray_SA.py:19` | src | **코드로 확인됨 (usb_cam metadata 미선언)** — ERP42 camera package 아래에 있는 별도 simulation script로 확인됨 |
 | ROS 1 `dynamic_reconfigure` compatibility script | 미기재 | `src/pcl_ros/cfg/common.py:3` | src | **코드로 확인됨 (metadata 미선언)** — ROS 2 `pcl_ros` metadata에는 해당 Python dependency가 없음 |
-| custom 선형 EKF (NumPy 구현) | 해당 없음 | `src/erp_driver/scripts/1024_EBIMU_EKF.py:141`; `erp42_main/src/erp_driver/scripts/erp42_imu-gps-wheel-ekf_globalposition.py:203` | 양쪽 | **코드로 확인됨** — GPS update의 고정 선형 관측행렬 예: 개인본 `:133`, 팀본 `:167` |
+| custom 선형 EKF (NumPy 구현) | 해당 없음 | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py:141`; `erp42_main/src/erp_driver/scripts/erp42_imu-gps-wheel-ekf_globalposition.py:203` | 양쪽 | **코드로 확인됨** — GPS update의 고정 선형 관측행렬 예: 개인본 `:133`, 팀본 `:167` |
 | 대회 센서융합 구현으로서 UKF (7 sigma points) | 미기재 | `docs/portfolio/mission-cards.md:26` | 보고서 주장(두 ERP42 구현과 불일치) | **보고서에만 있고 코드엔 없음** — custom ERP42 EKF 두 파일에는 sigma-point 생성이 없음; repository의 upstream `robot_localization` UKF는 별개 |
 
 ### import는 있으나 package metadata가 빠진 핵심 항목 요약
@@ -103,7 +103,7 @@ rg -n --glob 'setup.py' 'install_requires|entry_points|console_scripts|version='
 rg -n --glob '*.py' '^\s*(from\s+[A-Za-z_][A-Za-z0-9_.]*\s+import|import\s+[A-Za-z_][A-Za-z0-9_., ]*)' src erp42_main/src
 rg -n --glob '*.py' '^\s*(from\s+(numpy|cv2|ultralytics|pymap3d|filterpy|scipy|sklearn|matplotlib|serial|pandas|torch|yaml)(\.|\s)|import\s+(numpy|cv2|ultralytics|pymap3d|filterpy|scipy|sklearn|matplotlib|serial|pandas|torch|yaml)(\.|\s|,|$))' src erp42_main/src
 rg -n --glob '*.py' '^\s*(from\s+filterpy(\.|\s)|import\s+filterpy(\.|\s|,|$))' src erp42_main/src
-rg -n 'def (predict|cb_gps)|H\s*=|sigma|Merwe|Unscented|Kalman' src/erp_driver/scripts/1024_EBIMU_EKF.py erp42_main/src/erp_driver/scripts/erp42_imu-gps-wheel-ekf_globalposition.py
+rg -n 'def (predict|cb_gps)|H\s*=|sigma|Merwe|Unscented|Kalman' src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py erp42_main/src/erp_driver/scripts/erp42_imu-gps-wheel-ekf_globalposition.py
 rg -n -i 'YOLOv8|YOLOv11|UKF|Unscented|filterpy|YOLO' docs/portfolio/mission-cards.md src erp42_main/src --glob '*.py' --glob 'package.xml' --glob 'setup.py' --glob '*.launch.py' --glob '*.yaml'
 find src erp42_main/src -type f \( -iname '*.pt' -o -iname '*yolo*' \) -print | sort
 ```

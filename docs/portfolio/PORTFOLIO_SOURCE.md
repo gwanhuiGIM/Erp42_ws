@@ -28,9 +28,9 @@
 
 | 축 | 구현(알고리즘/코드) | 실기 테스트·파라미터 튜닝 | 근거 파일 |
 |---|---|---|---|
-| LiDAR 장애물인식/클러스터링 | **본인** | **본인** | `pcl_clustering_py/euclidean_cluster_node.py`, `cluster_bev/src/cluster_bev_node.cpp`, `erp_driver/scripts/0724_*`~`0822_*` |
-| Pathtracking/제어/Controller Node | **본인** | **본인** | `erp42_pathtracking.py`, `0702_erp42_controller.py`, `erp42_serial.py` |
-| EKF 센서퓨전(localization) | 팀 동료 | **본인**(실차 파라미터 조정) | `1024_EBIMU_EKF.py` / `erp42_imu-gps-wheel-ekf_globalposition.py` — §3-2 |
+| LiDAR 장애물인식/클러스터링 | **본인** | **본인** | `pcl_clustering_py/euclidean_cluster_node.py`, `cluster_bev/src/cluster_bev_node.cpp`, `erp_driver/scripts/archive/0724_*`~`0822_*`(병합 후 archive로 이동, 2026-09-18) |
+| Pathtracking/제어/Controller Node | **본인** | **본인** | `erp42_pathtracking.py`, `erp42_controller.py`, `erp42_serial.py` |
+| EKF 센서퓨전(localization) | 팀 동료 | **본인**(실차 파라미터 조정) | `erp42_ebimu_ekf_globalposition.py` / `erp42_imu-gps-wheel-ekf_globalposition.py` — §3-2 |
 | 비전(차선 인식/YOLO) | 팀 동료 | **본인**(실차 파라미터 조정) | `0702_erp42_lanedetect*.py`, `erp42_lanedetect_yolo.py`, `yolo_ros` — §3-2 |
 | RTK/GPS/IMU 드라이버 통합 | 팀 공용 인프라 | **본인**(포트/mountpoint 등 실차 설정값) | vendor 패키지 통합 수준(`ublox_gps`, `ntrip_client`, `vectornav`) |
 
@@ -46,7 +46,7 @@
 - `pcl_clustering_py`/`cluster_bev`는 `/clustered_points`, `/clusters_bev`를 발행하지만 이를 구독하는 판단/제어 노드가 저장소에 없다(`architecture.md` "그래프 밖으로 분리한 topic") — **클러스터링 결과가 최종 의사결정에 연결된 근거는 현재 코드에 없다.**
 
 **Pathtracking → 제어 경로 (src와 erp42_main이 아키텍처 세대가 다름)**
-- `src/erp42_pathtracking.py`: waypoint 추종 결과를 `/erp42_ctrl_cmd/path`로 발행(`:53-56`), `0702_erp42_controller.py`가 `lane`과 `path` 두 채널을 selector로 중재해 `/erp42_ctrl_cmd`를 최종 발행.
+- `src/erp42_pathtracking.py`: waypoint 추종 결과를 `/erp42_ctrl_cmd/path`로 발행(`:53-56`), `erp42_controller.py`가 `lane`과 `path` 두 채널을 selector로 중재해 `/erp42_ctrl_cmd`를 최종 발행.
 - `erp42_main/erp42_pathtracking.py`: Controller Node를 거치지 않고 `/erp42_ctrl_cmd`를 **직접** 발행 — 팀 최종본에서는 selector 단계가 통째로 빠졌다.
 
 ## 3-1. 결합 지점 (하나 바꾸면 같이 바뀌어야 하는 것)
@@ -62,7 +62,7 @@
 > §2 표 기준 **알고리즘/코드 구현**은 본인 담당 밖이다. 아래는 "내가 이 알고리즘을 설계했다"가 아니라 **프로젝트 전체를 이해하고 실차에서 튜닝하기 위해 코드를 읽고 파악한 내용**이며, 알고리즘 설계 성과로는 제시하지 않는다. 다만 §2 표에 정리했듯 이 모듈들의 **실기 테스트·파라미터 조정은 본인이 진행**했다(🔵 추론 — 사용자 진술 근거). 상세 근거는 `architecture.md`(topic 그래프)·`SKILL_INVENTORY.md`(§[좌표계]·§[비전] 태그 전체)·`tech-stack.md`(보고서 vs 코드 스택 대조)가 원본이다.
 
 **EKF 센서퓨전(localization)**
-- `src/`: `1024_EBIMU_EKF.py` — GPS(`/ublox_gps_node/fix`)·IMU(`/ebimu_data`)·wheel encoder(`/erp42_status`)를 구독해 `/odom_ekf` 발행. `pymap3d.geodetic2enu`로 ENU 변환(`:126`), 고정 선형 관측행렬 `H`(`:133`) — sigma-point 생성 근거가 없어 **UKF가 아니라 선형 EKF**다.
+- `src/`: `erp42_ebimu_ekf_globalposition.py` — GPS(`/ublox_gps_node/fix`)·IMU(`/ebimu_data`)·wheel encoder(`/erp42_status`)를 구독해 `/odom_ekf` 발행. `pymap3d.geodetic2enu`로 ENU 변환(`:126`), 고정 선형 관측행렬 `H`(`:133`) — sigma-point 생성 근거가 없어 **UKF가 아니라 선형 EKF**다.
 - `erp42_main/`: `erp42_imu-gps-wheel-ekf_globalposition.py` — VectorNav IMU(`/vectornav/imu`)로 센서만 교체된 동형 구현. quaternion→yaw +90° 보정, geodetic→ENU, `map`→`base_link` odometry 발행(`:149-152,154-164,218-228`), GPS covariance 기반 update(`:154-188`). pathtracking이 발행하는 `/erp42_ctrl_cmd`를 다시 구독해 prediction feedback으로 쓰는 구조(`architecture.md` M_PATH→M_EKF edge)라는 점은 `src/`판(Controller 경유)과 다른 아키텍처 세대다.
 - 실 주행 rosbag(`rosbag2_2025_10_25-16_34_43`)에 `/erp42_status`가 없어 `predict()`가 `v=0`으로만 불린다는 숨은 의존성을 코드로 확인함(2026-08-21, §6 원본 요약) — replay 실행 자체는 도구 미설치로 미시도.
 
@@ -78,7 +78,7 @@
 - **§0-1 기여경계**: 라이브러리 `tf_transformations`가 odometry quaternion→yaw 추출만 제공 / waypoint 탐색, heading error 계산, blending, 정지 sentinel(`brake=155`) 로직은 직접 구현.
 
 ### [안전][상태관리] Controller Node 우선순위 selector
-- **결정**: `0702_erp42_controller.py`에서 lane 채널을 path 채널보다 먼저 검사하는 `if/elif` selector + freshness timeout(`:37-46`) + 어느 입력도 유효하지 않으면 `brake=155` full-brake로 폴백(`:48-58`) 구현. 대회 보고서가 주장하는 camera/lidar/path 3단계 selector 전체는 아니고, lane/path 2채널 prototype이다.
+- **결정**: `erp42_controller.py`에서 lane 채널을 path 채널보다 먼저 검사하는 `if/elif` selector + freshness timeout(`:37-46`) + 어느 입력도 유효하지 않으면 `brake=155` full-brake로 폴백(`:48-58`) 구현. 대회 보고서가 주장하는 camera/lidar/path 3단계 selector 전체는 아니고, lane/path 2채널 prototype이다.
 - **§0-1 기여경계**: 라이브러리 `rclpy`가 timer/pub-sub만 제공 / 채널 유효시간, brake sentinel, 우선순위, fallback 상태 정의는 직접 설계.
 - **한계(정직하게)**: 이 selector는 `src/erp42_pathtracking.py:53-57,179-190`가 발행하는 `/erp42_ctrl_cmd/path`·`brake=2`와 Controller의 `path_valid` 조건이 **topic·값 계약 수준에서는 일치**한다. 다만 두 파일 모두 `src/erp_driver/CMakeLists.txt:14-20`의 설치 대상도, 유일한 launch 파일의 실행 대상도 아니어서 "실제로 배선돼 살아있는 경로"가 아니라 **"소스 레벨 계약만 맞는 prototype"**이다 — 실행 로그·rosbag은 이번 검토 범위에 없어 확인 불가(2026-08-29 독립 codex 재검증). 팀 최종본(`erp42_main/`)에서는 Controller 파일 자체가 없어 이 selector가 통째로 빠져 있다는 것은 정확함.
 
@@ -93,14 +93,14 @@
 - **한계(정직하게)**: 이 bicycle model은 LiDAR cone-following variant 1개에서만 쓰이고, 대회 waypoint pathtracking 본선 코드(`erp42_pathtracking.py`)는 여전히 heading-error P제어 방식이라 서로 다른 두 조향 방식이 공존한다. 이 variant가 launch/CMake에 배선돼 실행됐는지는 §4-3 한계와 동일하게 미확인.
 
 ### [통신] ERP42 command 다중 채널 설계 (`/erp42_ctrl_cmd/{lane,path,lidar,camera}`)
-- **결정**: 보고서의 3-tier selector를 반영해 채널을 4개(`lane`/`path`/`lidar`/`camera`)로 **의도 설계**. 다만 네 채널을 하나의 구현에서 동시에 선언·중재하는 코드는 없고, 실제 Controller prototype도 `lane`/`path` 두 채널만 처리한다(`0702_erp42_controller.py:16-21`) — "채널을 4개로 분리 설계"는 코드로 구현된 사실이 아니라 **보고서/의도 수준**으로 한정한다(2026-08-29 독립 codex 재검증).
+- **결정**: 보고서의 3-tier selector를 반영해 채널을 4개(`lane`/`path`/`lidar`/`camera`)로 **의도 설계**. 다만 네 채널을 하나의 구현에서 동시에 선언·중재하는 코드는 없고, 실제 Controller prototype도 `lane`/`path` 두 채널만 처리한다(`erp42_controller.py:16-21`) — "채널을 4개로 분리 설계"는 코드로 구현된 사실이 아니라 **보고서/의도 수준**으로 한정한다(2026-08-29 독립 codex 재검증).
 - **§0-1 기여경계**: `rclpy` pub/sub가 전송 계층 제공 / 채널 분리·의미 부여는 직접 설계.
 - **한계(정직하게)**: `camera` 채널은 전체 저장소에서 발행/구독 **0건**(설계만 있고 구현 안 됨), `lidar` 채널은 앞서 설명한 dead branch, `lane` 채널은 `src/`에서만 살아있고 `erp42_main/`에서는 구독자가 없는 dead topic.
 
 ### [노드설계] Controller·pathtracking·serial 역할 분리와 timer 기반 I/O
-- **결정**: 경로추종은 `/erp42_ctrl_cmd/path`를 발행하고(`erp42_pathtracking.py:53-57`), Controller Node가 lane/path 입력을 구독해 20Hz timer에서 `/erp42_ctrl_cmd`를 하나만 발행하며(`0702_erp42_controller.py:16-24,37-58`), serial Node가 이 최종 명령을 구독해 40Hz timer에서 ERP42 packet 송수신과 status 발행을 담당하도록 분리했다(`erp42_serial.py:24-27,37-46`).
-- **§0-1 기여경계**: `rclpy`가 `Node`·pub/sub·timer·`spin()` 실행을 제공하고(`0702_erp42_controller.py:8-24,60-65`; `erp42_serial.py:11-27,77-82`), 채널별 Node 분리, topic wiring, 20Hz selector와 40Hz serial I/O 주기 설정은 직접 구현했다(`0702_erp42_controller.py:16-27`; `erp42_serial.py:24-27`).
-- **한계(정직하게)**: pathtracking 제어는 별도 timer가 아니라 odometry callback 안에서 실행되고(`erp42_pathtracking.py:59-65,138-190`), 세 Node 모두 `rclpy.spin(node)`만 사용한다(`0702_erp42_controller.py:60-65`; `erp42_pathtracking.py:204-209`; `erp42_serial.py:77-82`) — Executor·CallbackGroup을 명시한 동시성 설계는 이 경로에서 확인되지 않는다. 또한 `src/erp_driver/CMakeLists.txt:14-20`은 `erp42_serial.py` 계열만 설치 대상에 포함하고 Controller/pathtracking은 포함하지 않는다 — "노드 분리 architecture를 소스로 설계했다"와 "launch 가능한 통합 시스템을 구성했다"는 구분한다(2026-08-29 독립 codex 재검증).
+- **결정**: 경로추종은 `/erp42_ctrl_cmd/path`를 발행하고(`erp42_pathtracking.py:53-57`), Controller Node가 lane/path 입력을 구독해 20Hz timer에서 `/erp42_ctrl_cmd`를 하나만 발행하며(`erp42_controller.py:16-24,37-58`), serial Node가 이 최종 명령을 구독해 40Hz timer에서 ERP42 packet 송수신과 status 발행을 담당하도록 분리했다(`erp42_serial.py:24-27,37-46`).
+- **§0-1 기여경계**: `rclpy`가 `Node`·pub/sub·timer·`spin()` 실행을 제공하고(`erp42_controller.py:8-24,60-65`; `erp42_serial.py:11-27,77-82`), 채널별 Node 분리, topic wiring, 20Hz selector와 40Hz serial I/O 주기 설정은 직접 구현했다(`erp42_controller.py:16-27`; `erp42_serial.py:24-27`).
+- **한계(정직하게)**: pathtracking 제어는 별도 timer가 아니라 odometry callback 안에서 실행되고(`erp42_pathtracking.py:59-65,138-190`), 세 Node 모두 `rclpy.spin(node)`만 사용한다(`erp42_controller.py:60-65`; `erp42_pathtracking.py:204-209`; `erp42_serial.py:77-82`) — Executor·CallbackGroup을 명시한 동시성 설계는 이 경로에서 확인되지 않는다. 또한 `src/erp_driver/CMakeLists.txt:14-20`은 `erp42_serial.py` 계열만 설치 대상에 포함하고 Controller/pathtracking은 포함하지 않는다 — "노드 분리 architecture를 소스로 설계했다"와 "launch 가능한 통합 시스템을 구성했다"는 구분한다(2026-08-29 독립 codex 재검증).
 
 > **검증 메모(2026-08-26, 독립 codex exec 재검증 — 반영 완료)**: [모션플래닝]·[안전][상태관리] 두 항목에 5-waypoint heading/cost gate·goal index 비감소 제약, `lane brake==3`/`path brake==2` sentinel 결합 디테일을 위 §4-1·§4-2 본문에 반영했다(2026-08-29).
 >
@@ -119,7 +119,7 @@
 ### STAR 2 — 다중 command 충돌을 줄이기 위한 Controller Node arbitration prototype
 - **Situation**: lane 인식 노드와 pathtracking 노드가 각자 `/erp42_ctrl_cmd` 계열 command를 만들면서, stale command나 동시 발행을 통제할 지점이 없었다(대회 보고서는 신호/표지판·장애물회피·경로추종 3단계 우선순위 Controller를 주장).
 - **Task**: 최소한 lane/path 2채널이라도 하나의 지점에서 중재하고, 유효한 입력이 없을 때 안전하게 정지시키는 prototype을 만든다.
-- **Action**: `0702_erp42_controller.py:16-58`에 lane 우선 `if/elif` + 채널별 0.2초 freshness timeout + `brake==3`(lane)/`brake==2`(path) validity sentinel + 20Hz arbitration + 입력 부재 시 `brake=155` full-brake fallback을 구현하고, `src/erp42_pathtracking.py:53-57,179-190`가 `/erp42_ctrl_cmd/path`·`brake=2`를 발행해 이 Controller의 입력 계약과 맞물리도록 만들었다.
+- **Action**: `erp42_controller.py:16-58`에 lane 우선 `if/elif` + 채널별 0.2초 freshness timeout + `brake==3`(lane)/`brake==2`(path) validity sentinel + 20Hz arbitration + 입력 부재 시 `brake=155` full-brake fallback을 구현하고, `src/erp42_pathtracking.py:53-57,179-190`가 `/erp42_ctrl_cmd/path`·`brake=2`를 발행해 이 Controller의 입력 계약과 맞물리도록 만들었다.
 - **Result**: `src/`에서는 pathtracking output과 Controller input의 **소스 레벨 topic·값 계약**이 일치함을 확인했다(✅ 검증됨). 다만 두 파일 모두 `CMakeLists.txt`의 설치 대상도 launch 파일의 실행 대상도 아니어서 install/launch 배선과 실차 실행 근거는 없다 — "설계·구현했다"와 "대회 run에 실제로 통합됐다"를 구분한다. 팀 정리본(`erp42_main/`)은 pathtracking이 `/erp42_ctrl_cmd`에 직접 발행하고 Controller 파일 자체가 없어, 이 prototype이 최종 대회 run에 쓰였는지는 불확실하다(🔵 추론).
 
 ### STAR 3 — perception 이벤트와 무관하게 동작하는 baseline pathtracking
@@ -186,7 +186,7 @@
 | 전공 | 코드에 실제로 닿은 과목 | 이 프로젝트의 실제 지점 (근거) |
 |---|---|---|
 | **제어공학** | 비례(P) 제어, 저역통과 필터링, bicycle 운동학 모델 | waypoint pathtracking 본선 경로는 heading error P steering + `alpha=0.65` blending 직접구현(`erp42_pathtracking.py:175-190`, **내 몫**), 적분/미분 항은 미사용. 별도로 LiDAR cone-following variant(`0822_Lam_ObtAvo.py:130-135`)에서는 `wheelbase` 기반 bicycle 운동학 모델로 Pure Pursuit 조향각을 직접 도출함(**내 몫**, 2026-08-29 추가) — PID 이론은 여전히 **심화 학습 여지** |
-| **CS/컴퓨터공학** | 상태머신, ROS2 통신 설계 | Controller Node의 lane/path selector + freshness timeout + fallback(`0702_erp42_controller.py:37-58`, **내 몫**). Executor/CallbackGroup/Lock 등 동시성 설계는 이 담당 구간에서 미확인 — **심화 학습 여지** |
+| **CS/컴퓨터공학** | 상태머신, ROS2 통신 설계 | Controller Node의 lane/path selector + freshness timeout + fallback(`erp42_controller.py:37-58`, **내 몫**). Executor/CallbackGroup/Lock 등 동시성 설계는 이 담당 구간에서 미확인 — **심화 학습 여지** |
 | **기계공학/로보틱스** | Point cloud 기하(Euclidean clustering, RANSAC 평면제거) | `pcl_clustering_py`/`cluster_bev`가 PCL 알고리즘 호출(**경계**) / ROI·파라미터 튜닝·ROS 노드 구성은 **내 몫**. Voxel downsampling·시각화도 직접 구성 |
 | **전자공학** | 센서·통신 인터페이스 | ERP42 시리얼 프로토콜(40Hz packet, `erp42_serial.py`), Velodyne UDP/IP 구성 — **구성 수준, 회로 설계 아님** |
 

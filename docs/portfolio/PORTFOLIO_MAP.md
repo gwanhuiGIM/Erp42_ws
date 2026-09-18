@@ -84,11 +84,11 @@
 |---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | `cluster_bev` | `src/cluster_bev/src/cluster_bev_node.cpp` |  |  |  | ● |  |  |  |  | ○ | ○ |  |
 | `ebimu_pkg` | `src/ebimu_pkg/ebimu_pkg/ebimu_publisher.py` |  |  | ○ | ● |  |  |  |  |  | ○ |  |
-| `erp_driver` | `src/erp_driver/scripts/1024_EBIMU_EKF.py` |  |  | ● | ○ |  |  | ○ |  |  | ○ |  |
+| `erp_driver` | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py` |  |  | ● | ○ |  |  | ○ |  |  | ○ |  |
 | `erp_driver` | `src/erp_driver/scripts/erp42_pathtracking.py` |  |  | ○ | ○ |  | ● | ○ | ● |  |  |  |
-| `erp_driver` | `src/erp_driver/scripts/0702_erp42_controller.py` |  |  |  | ○ |  |  | ● | ● |  |  |  |
-| `erp_driver` | `src/erp_driver/scripts/0702_erp42_lanedetect.py` |  | ● |  | ○ |  | ○ |  |  |  |  |  |
-| `erp_driver` | `src/erp_driver/scripts/0822_Obstacle_3d.py` |  |  |  | ○ |  | ○ |  | ● |  | ○ |  |
+| `erp_driver` | `src/erp_driver/scripts/erp42_controller.py` |  |  |  | ○ |  |  | ● | ● |  |  |  |
+| `erp_driver` | `src/erp_driver/scripts/archive/0702_erp42_lanedetect.py` |  | ● |  | ○ |  | ○ |  |  |  |  |  |
+| `erp_driver` | `src/erp_driver/scripts/archive/0822_Obstacle_3d.py` |  |  |  | ○ |  | ○ |  | ● |  | ○ |  |
 | `erp_driver` | `src/erp_driver/scripts/erp42_serial.py` |  |  |  | ● | ○ |  | ○ | ○ |  |  |  |
 | `erp_driver` | `src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py` |  |  | ○ | ○ |  | ○ |  |  |  | ● |  |
 | `erp_interfaces` | `src/erp_interfaces/msg/ErpCmdMsg.msg` |  |  |  | ● |  |  | ○ | ○ |  |  |  |
@@ -154,7 +154,7 @@
 전체 상세(파일:라인 근거, §0-1 기여경계 한 줄)는 원본 문서에 보존돼 있다. 요약과 핵심 발견만 아래에 옮긴다 — **전체를 인용해야 할 때는 원본을 직접 참조할 것**: `docs/portfolio/PORTFOLIO_MAP_src.md` §4, `docs/portfolio/PORTFOLIO_MAP_erp42_main.md` §4.
 
 ### 4-A. `src/` 핵심 발견 (전체는 PORTFOLIO_MAP_src.md 참고)
-- `1024_EBIMU_EKF.py`: `pymap3d.geodetic2enu`(`:126`)로 ENU 변환, 고정 선형 관측행렬 `H`(`:133`) — sigma-point 생성 근거 없어 **UKF 아님, 선형 EKF**로 서술.
+- `erp42_ebimu_ekf_globalposition.py`: `pymap3d.geodetic2enu`(`:126`)로 ENU 변환, 고정 선형 관측행렬 `H`(`:133`) — sigma-point 생성 근거 없어 **UKF 아님, 선형 EKF**로 서술.
 - `erp42_pathtracking.py`: nearest/lookahead waypoint(`:84,128,161`) + heading error 비례제어 + `alpha=0.65` blending(`:184-186`, PID의 I/D 항 없음). `brake=155` 정지(`:195-201`) vs `brake==2` LiDAR 분기는 index 갱신뿐인 dead branch(`:142-145`).
 - `Pick_Tray_SA.py`: Isaac Sim 앱, `/hand_raw`/`/hand_xyz`/`/hand_mode` 구독(`:251-266`) — **ERP42 대회와 무관한 별도 프로젝트 파일로 판단, 포트폴리오 성과 주장에서 제외**.
 - `fast_gicp`, `hdl_global_localization`, `ndt_omp`, `pcl_ros`, `robot_localization` 다수 파일: **bundled upstream 소스로 보이며 개인 기여 범위는 `[확인 필요]`** — git 이력 없어 확정 불가.

@@ -46,11 +46,11 @@
 |---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | `cluster_bev` | `src/cluster_bev/src/cluster_bev_node.cpp` |  |  |  | ● |  |  |  |  | ○ | ○ |  |
 | `ebimu_pkg` | `src/ebimu_pkg/ebimu_pkg/ebimu_publisher.py` |  |  | ○ | ● |  |  |  |  |  | ○ |  |
-| `erp_driver` | `src/erp_driver/scripts/1024_EBIMU_EKF.py` |  |  | ● | ○ |  |  | ○ |  |  | ○ |  |
+| `erp_driver` | `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py` |  |  | ● | ○ |  |  | ○ |  |  | ○ |  |
 | `erp_driver` | `src/erp_driver/scripts/erp42_pathtracking.py` |  |  | ○ | ○ |  | ● | ○ | ● |  |  |  |
-| `erp_driver` | `src/erp_driver/scripts/0702_erp42_controller.py` |  |  |  | ○ |  |  | ● | ● |  |  |  |
-| `erp_driver` | `src/erp_driver/scripts/0702_erp42_lanedetect.py` |  | ● |  | ○ |  | ○ |  |  |  |  |  |
-| `erp_driver` | `src/erp_driver/scripts/0822_Obstacle_3d.py` |  |  |  | ○ |  | ○ |  | ● |  | ○ |  |
+| `erp_driver` | `src/erp_driver/scripts/erp42_controller.py` |  |  |  | ○ |  |  | ● | ● |  |  |  |
+| `erp_driver` | `src/erp_driver/scripts/archive/0702_erp42_lanedetect.py` |  | ● |  | ○ |  | ○ |  |  |  |  |  |
+| `erp_driver` | `src/erp_driver/scripts/archive/0822_Obstacle_3d.py` |  |  |  | ○ |  | ○ |  | ● |  | ○ |  |
 | `erp_driver` | `src/erp_driver/scripts/erp42_serial.py` |  |  |  | ● | ○ |  | ○ | ○ |  |  |  |
 | `erp_driver` | `src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py` |  |  | ○ | ○ |  | ○ |  |  |  | ● |  |
 | `erp_interfaces` | `src/erp_interfaces/msg/ErpCmdMsg.msg` |  |  |  | ● |  |  | ○ | ○ |  |  |  |
@@ -95,7 +95,7 @@
 
 ### 4.3 `erp_driver`
 
-#### `src/erp_driver/scripts/1024_EBIMU_EKF.py`
+#### `src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py`
 
 - **● 좌표계:** `tf_transformations` quaternion↔Euler를 사용하고(`:8,98,179`), GPS 위경도를 `pymap3d.geodetic2enu`로 ENU 변환한다(`:126`). GPS update는 고정 선형 관측행렬 `H`를 사용한다(`:133`); sigma-point 생성 근거가 없으므로 UKF로 쓰지 않는다.
 - **§0-1 기여경계:** 라이브러리 NumPy/pymap3d/tf_transformations가 행렬·ENU·quaternion 연산을 제공 / 코드는 EBIMU·GPS·wheel status subscription, 선형 EKF update/predict, `/odom_ekf` 출력을 조합한다(`:61-64,121,141`).
@@ -106,18 +106,18 @@
 - **● 안전:** final waypoint에서 `stop_robot()`을 호출하고(`:170-171`), 정지 명령은 `brake=155`다(`:195-201`). 반면 LiDAR 조건 `brake==2`는 waypoint index만 갱신하며(`:142-145`), `mission-cards.md`에서 확인한 것처럼 `/lidar` publisher 중 값 2를 내는 node가 없어 dead branch다.
 - **§0-1 기여경계:** 라이브러리 rclpy/tf_transformations가 ROS 통신과 yaw 추출을 제공 / 코드는 odometry·path·LiDAR command를 결합한 waypoint navigator와 ERP42 command 생성을 구현한다.
 
-#### `src/erp_driver/scripts/0702_erp42_controller.py`
+#### `src/erp_driver/scripts/erp42_controller.py`
 
 - **● 상태관리:** lane command를 path command보다 먼저 검사하는 `if/elif` selector와 freshness timeout을 둔다(`:37-46`). 이는 두 채널 prototype이며 보고서의 camera/lidar/path 3-tier 전체 구현은 아니다.
 - **● 안전:** 어느 입력도 valid하지 않으면 `brake=155` full-brake command를 publish한다(`:48-58`).
 - **§0-1 기여경계:** 라이브러리 rclpy가 timer/pub-sub를 제공 / 코드는 lane/path command의 유효시간, brake sentinel, 우선순위와 fallback brake state를 정의한다(`:16-24,39-55`).
 
-#### `src/erp_driver/scripts/0702_erp42_lanedetect.py`
+#### `src/erp_driver/scripts/archive/0702_erp42_lanedetect.py`
 
 - **● 비전:** OpenCV로 HSV white/yellow mask를 만들고(`:58-63,111-117`), Canny/Hough line을 계산한다(`:129-134`). `/usb_cam_0/image_raw`을 받아 `/erp42_ctrl_cmd/lane`을 publish한다(`:366-368`). camera launch output과의 topic mismatch 가능성은 `architecture.md` 근거상 남아 있다.
 - **§0-1 기여경계:** 라이브러리 OpenCV/cv_bridge가 image 변환·HSV·edge/Hough 연산을 제공 / 코드는 ROI, lane candidate, steering command node를 구성한다.
 
-#### `src/erp_driver/scripts/0822_Obstacle_3d.py`
+#### `src/erp_driver/scripts/archive/0822_Obstacle_3d.py`
 
 - **● 안전:** `/velodyne_points`를 구독해 `/erp42_ctrl_cmd/lidar`를 발행한다(`:14,17`); 장애물 조건에서 `brake=200`, 그 외 `brake=0`을 낸다(`:69,117`). 따라서 pathtracking이 요구하는 `brake==2`와 맞지 않아 최종 selector 연동은 dead branch이며, standalone safety experiment로만 서술한다.
 - **§0-1 기여경계:** 라이브러리 rclpy/sensor_msgs가 PointCloud2 pub-sub를 제공 / 코드는 ROI 기반 장애물 판단과 ERP42 brake command 실험을 구성한다. 실제 제동 검증은 수행하지 않았다.

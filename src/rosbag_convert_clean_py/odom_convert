@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# ─── EDIT THESE ────────────────────────────────────────────────
+INPUT_CSV  = '/home/mrlam/colcon_ws/bagfiles_ros2/test5/feedback2_analyzed/odom_ukf_ctrl11.csv'
+OUTPUT_CSV = '/home/mrlam/colcon_ws/bagfiles_ros2/test5/feedback2_analyzed/odom_ukf_ctrl11_cleaned.csv'
+# ────────────────────────────────────────────────────────────────
+
+def main():
+    # 1) load just time + position columns (ignore the rest)
+    df = pd.read_csv(
+        INPUT_CSV,
+        usecols=[
+            'time',
+            'pose.pose.position.x',
+            'pose.pose.position.y',
+            'pose.pose.position.z'
+        ],
+        dtype={
+            'time':      str,   # read as str first so we can coerce safely
+            'pose.pose.position.x': float,
+            'pose.pose.position.y': float,
+            'pose.pose.position.z': float
+        }
+    )
+
+    # 2) drop rows where x, y, and z are *all* zero
+    df = df[
+        (df['pose.pose.position.x'] != 0) |
+        (df['pose.pose.position.y'] != 0) |
+        (df['pose.pose.position.z'] != 0)
+    ]
+
+    # 3) convert time → float, drop any bad parses
+    df['time'] = pd.to_numeric(df['time'], errors='coerce')
+    df = df[df['time'].notnull()]
+
+    # 4) reset index & save cleaned CSV
+    df = df.reset_index(drop=True)
+    df.to_csv(OUTPUT_CSV, index=False)
+    print(f"Cleaned data written to: {OUTPUT_CSV}")
+
+    # 5) plot Easting & Northing vs time
+    plt.figure()
+    plt.plot(df['time'], df['pose.pose.position.x'], label='Easting (X)')
+    plt.plot(df['time'], df['pose.pose.position.y'], label='Northing (Y)')
+    plt.xlabel('Time (s)')
+    plt.ylabel('UTM Coordinate (m)')
+    plt.title('UTM Easting & Northing Over Time')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == '__main__':
+    main()

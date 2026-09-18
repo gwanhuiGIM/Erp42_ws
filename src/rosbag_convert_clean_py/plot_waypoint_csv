@@ -1,0 +1,37 @@
+import pandas as pd
+
+# Load your original horizontal CSV
+df = pd.read_csv('/home/mrlam/colcon_ws/bagfiles_ros2/test3_UKF_Pathtrack/spinning_far/waypoints_path.csv')
+
+vertical_data = []
+
+# Iterate through each row, unpack horizontal data into vertical format
+for index, row in df.iterrows():
+    time = row['time']
+    pose_idx = 0
+
+    while f'poses[{pose_idx}].header.stamp.sec' in row:
+        entry = {
+            'time': time,
+            'pose_index': pose_idx,
+            'header.stamp.sec': row[f'poses[{pose_idx}].header.stamp.sec'],
+            'header.stamp.nanosec': row[f'poses[{pose_idx}].header.stamp.nanosec'],
+            'header.frame_id': row[f'poses[{pose_idx}].header.frame_id'],
+            'pose.position.x': row[f'poses[{pose_idx}].pose.position.x'],
+            'pose.position.y': row[f'poses[{pose_idx}].pose.position.y'],
+            'pose.position.z': row[f'poses[{pose_idx}].pose.position.z'],
+            'pose.orientation.x': row[f'poses[{pose_idx}].pose.orientation.x'],
+            'pose.orientation.y': row[f'poses[{pose_idx}].pose.orientation.y'],
+            'pose.orientation.z': row[f'poses[{pose_idx}].pose.orientation.z'],
+            'pose.orientation.w': row[f'poses[{pose_idx}].pose.orientation.w'],
+        }
+        vertical_data.append(entry)
+        pose_idx += 1
+
+# Convert list of dicts to DataFrame
+vertical_df = pd.DataFrame(vertical_data)
+
+# Save to CSV
+vertical_df.to_csv('/home/mrlam/colcon_ws/bagfiles_ros2/test3_UKF_Pathtrack/spinning_far/waypoints_path.csv', index=False)
+
+print("Converted CSV data saved to 'converted_vertical.csv'")

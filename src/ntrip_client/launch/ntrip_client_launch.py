@@ -14,7 +14,7 @@ def generate_launch_description():
           DeclareLaunchArgument('debug',                 default_value='false'),
           DeclareLaunchArgument('host',                  default_value='rts1.ngii.go.kr'),
           DeclareLaunchArgument('port',                  default_value='2101'),
-          DeclareLaunchArgument('mountpoint',            default_value='RTK-RTCM32'),
+          DeclareLaunchArgument('mountpoint',            default_value='RTK-RTCM31'),
           DeclareLaunchArgument('ntrip_version',         default_value='None'),
           DeclareLaunchArgument('authenticate',          default_value='True'),
           DeclareLaunchArgument('username',              default_value=os.environ.get('NTRIP_USERNAME', '')),
