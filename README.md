@@ -125,6 +125,38 @@ python3 src/erp_driver/scripts/erp42_controller.py           # → /erp42_ctrl_c
 - Controller의 brake==2 판정은 `/erp42_ctrl_cmd/path` 토픽에만 적용된다. 위 4번의 `/erp42_ctrl_cmd/lidar`(pathtracking이 구독)와는 별개 토픽이다.
 </details>
 
+<a id="contribution"></a>
+## 프로젝트 요약 · 본인 담당 (김관희)
+
+> 포트폴리오용 프로젝트 요약입니다. 이 저장소의 코드는 팀 MTP의 대회 코드이고, 제 역할 범위는 **본인 담당** 행에 적었습니다. 접힌 '프로젝트 기술 전체'는 팀 전체 시스템 설명입니다. 다른 프로젝트: [github.com/gwanhuiGIM](https://github.com/gwanhuiGIM)
+
+**실제 주행시험장에서 달리는 자율주행 인지·판단·제어 노드를 설계해, 경진대회 무인모빌리티 부문에 팀장으로 출전하였습니다.**<br>
+수행 미션은 도로 경로 Navigation·장애물 우회·신호등 인식·돌발 장애물 정지 등이고, 팀원들과 함께 센서를 EKF로 융합해 측위를 구성했습니다. 특히 GPS 오차가 커지는 터널, drift하는 IMU처럼 인지 일부가 빠지는 상황에서도 멈추지 않는 측위·경로추종 기반을 만들어 실차 대회를 완주했습니다.
+
+ERP42 4륜 전기차 플랫폼 · 팀 MTP(충남대), 실개발 2\~3인 · **팀장** (24.08\~25.11)
+**본인 담당:** 팀장(개발 일정 수립·공유, 실습 환경 구성, 인수인계 문서화) · waypoint 경로추종 · 명령 중재 판단 노드
+**팀원들과 함께:** 센서 bring-up, EKF 센서퓨전 측위, 실차 테스트·튜닝
+
+- **개요:** 예선 10분·본선 15분 단일 주행으로 도로 경로 Navigation·장애물 우회·신호등 인식·돌발 장애물 정지 미션을 통과하는 기록을 경쟁하는 대회
+- **센서 → 측위 (팀원들과 함께):** LiDAR(VLP-16)·카메라·IMU·RTK-GPS bring-up → 휠 오도메트리를 IMU·GPS와 EKF로 융합해 120m 안팎 GPS 음영구간 대응
+- **경로추종 (본인):** Pure Pursuit·Stanley 검토 → heading error 비례 조향 + 직전 스텝과의 저역통과 blending으로 곡선 조향 튐 억제
+- **명령 중재 (본인):** 인지 모듈마다 제각각 내는 명령을 통제할 지점이 없음 → 차선/경로 채널을 우선순위·유효시간으로 중재, 유효 입력이 없으면 full-brake하는 판단 노드 prototype
+- **실차 문제:** 카메라 frame drop, 전력(보조배터리 추가), 진동에 따른 카메라·IMU 자세 변화, brake oil 누유, GNSS·ROS2 끊김
+  - → 튜닝 → 테스트 주행 → rosbag 로깅 → 분석을 반복하며 포트·RTK·속도·brake 값 조정
+- **결과·한계:** 인지 모듈 일부가 빠져도 측위·경로추종이 유지돼 완주(팀 회고 기준). 순위·정량 지표는 로그가 없어 미기재
+- **회고:** "무엇이 없어도 버티는가"를 먼저 설계하고, 성능은 튜닝·테스트·로깅 반복에서 나온다
+
+<details>
+<summary><b>프로젝트 기술 전체</b></summary>
+
+- **측위:** 휠 오도메트리 + IMU + GPS(u-blox ZED-F9P, NTRIP RTK)를 GPS covariance 가중 EKF로 융합, pymap3d로 geodetic→ENU 변환. 보고서의 UKF와 달리 최종 코드는 EKF
+- **경로계획·추종:** Bézier 곡선 경로계획 학습, OSM/JOSM 도로 경로 → UTM waypoint 생성, heading error P 조향 + 저역통과(`alpha=0.65`) blending
+- **판단:** lane/path 2채널 우선순위·freshness timeout 중재, 입력 부재 시 full-brake (20Hz, source-level prototype)
+- **인지:** 카메라 차선 인식(YOLO·HSV), LiDAR 장애물 인식(2D gap-following 설계 → 3D PCL/DBSCAN clustering 실험)
+- **차량 I/O:** ERP42 40Hz serial packet 송수신, 경로추종·판단·통신을 역할별 ROS2 노드로 분리
+
+</details>
+
 ## License
 루트 LICENSE는 없다. 각 패키지의 `package.xml` license 항목과 upstream 패키지의 `LICENSE`를 따른다. 팀 코드는 `erp_driver`·`erp_interfaces`·`cluster_bev`가 Apache-2.0으로 선언돼 있고, `ebimu_pkg`·`pcl_clustering_py`는 license가 지정돼 있지 않다.
 
