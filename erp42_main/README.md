@@ -2,23 +2,18 @@
 
 팀이 GitHub 공유용으로 정리했던 ERP42 코드의 과거 시점 사본이다. 최종본도, 실차 배포 스냅샷도 아니다. **이 저장소의 공개 기준은 [`../src`](../src/README.md)** 이고, 두 ws의 차이 요약은 [상위 README](../README.md)의 "저장소 구성" 절에 있다.
 
-> 참고: 최상위 `README.md`가 원래 `ublox` 패키지 README(upstream 문서)를 그대로 담고 있었음.
-> 그 내용은 [`src/ublox/README.md`](src/ublox/README.md)로 옮기고 여기는 프로젝트 개요로 새로 작성함.
-
 ## 핵심 파일 & 코드 흐름
-
-이 ws는 팀이 GitHub에 공유용으로 정리해 올린 부분집합이다.
 
 | 역할 | 파일 |
 |---|---|
 | Localization(EKF) | `src/erp_driver/scripts/erp42_imu-gps-wheel-ekf_globalposition.py` |
-| 차선 인식 | `src/erp_driver/scripts/erp42_lanedetect.py`, `erp42_lanedetect_yolo.py`, `src/yolo_ros/` |
-| LiDAR 장애물인식 | *(패키지 자체 없음 — `../src` 전용 영역, 여긴 미포함)* |
 | Pathtracking | `src/erp_driver/scripts/erp42_pathtracking.py` |
-| Command 중재(Controller) | *(파일 자체 없음 — pathtracking이 `/erp42_ctrl_cmd`를 직접 발행, `../src`에만 존재)* |
 | Actuation | `src/erp_driver/scripts/erp42_serial.py` |
+| 차선 인식 | `src/erp_driver/scripts/erp42_lanedetect.py`, `erp42_lanedetect_yolo.py`, `src/yolo_ros/` |
+| Command 중재(Controller) | *(없음 — pathtracking이 `/erp42_ctrl_cmd`를 직접 발행, `../src`에만 존재)* |
+| LiDAR 장애물인식 | *(없음 — `../src` 전용 영역)* |
 
-코드 흐름(이 ws 한정, 요약): `GPS/IMU/encoder → erp42_imu-gps-wheel-ekf_globalposition → erp42_pathtracking → erp42_serial`(Controller 없이 직접 발행 — `src/`와 가장 큰 아키텍처 차이). camera→차선인식 경로는 topic 불일치로 정적으로는 dead, LiDAR→pathtracking 경로는 이 ws에 publisher 자체가 없어 dead branch다.
+코드 흐름(요약): `GPS/IMU/encoder → erp42_imu-gps-wheel-ekf_globalposition → erp42_pathtracking → erp42_serial`. Controller 없이 pathtracking이 직접 발행하는 것이 `../src`와 가장 큰 구조 차이다.
 
 ## 패키지 구성 (모두 `src/` 하위, colcon 표준 레이아웃)
 
@@ -31,8 +26,8 @@
 | `ublox`, `ublox_gps`, `ublox_msgs`, `ublox_serialization` | u-blox GPS 드라이버 (`../src`의 `ublox/` 서브패키지들이 최상위로 분리 배치됨, 내용 동일) |
 | `usb_cam` | USB 카메라 드라이버 (`params_1`~`4` — 카메라 최대 4대) |
 | `vectornav` | VectorNav IMU/INS/GNSS 드라이버 |
-| `vectornav_msgs` | `vectornav`가 의존하는 커스텀 메시지 패키지 — 원래 이 ws에 누락되어 있던 것을 `../src/vectornav/vectornav_msgs`에서 복사해 추가함 |
-| `yolo_ros` | YOLO 추론 ROS2 래퍼 (+ `best_lane_yolov11.pt` 가중치) |
+| `vectornav_msgs` | `vectornav`가 의존하는 커스텀 메시지 패키지(`../src/vectornav/vectornav_msgs`에서 복사) |
+| `yolo_ros` | YOLO 추론 ROS2 래퍼 (가중치 `*.pt`는 gitignore라 저장소에 없음) |
 | `rosbag_convert_clean_py`, `rosbag2csv.py` | rosbag → GPS/odom/waypoint CSV 후처리 도구 |
 
 ## `src/` 대비 이 정리본에서 달라진 것
@@ -41,9 +36,16 @@
 - `usb_cam`: 카메라 장치·해상도·노출 설정을 실차 값으로 교체, 카메라 2대→4대 설정 추가.
 - `ntrip_client`: mountpoint 기본값을 `RTK-RTCM31`로 변경.
 - `vectornav`: `port`를 `/dev/ttyUSB0`으로 교체.
-- LiDAR/localization 실험 스택(hdl_localization, fast_gicp, velodyne 등)은 미포함 — 이 정리본의 범위 밖.
+- LiDAR/localization 실험 스택(hdl_localization, fast_gicp, velodyne 등)은 이 정리본의 범위 밖.
 
-## 이번에 수정한 것 (2026-08-20)
-- 🔧 `vectornav_msgs` 패키지 추가: `../src/vectornav/vectornav_msgs` → `src/vectornav_msgs`로 복사. `vectornav/CMakeLists.txt`의 `find_package(vectornav_msgs REQUIRED)`가 해석 안 되던 문제 해소.
-- 🔧 `src/` 래퍼 추가: 이전엔 모든 패키지가 `erp42_main/` 루트에 바로 있어 colcon 기본 스캔 경로(`<ws>/src`)와 어긋났음. 전 패키지를 `erp42_main/src/` 하위로 이동.
-- ⚠️ 미검증: `colcon build`를 실제로 돌려서 확인하지 않았음 — 위 두 조치는 정적 분석(코드/구조) 기준 수정이며, 이 외의 빌드 에러(다른 의존성 누락 등)가 남아있을 가능성은 배제 못 함.
+## 한계 · 미완성
+1. **빌드 미검증**: 이 ws는 `colcon build`로 확인하지 않았다.
+2. **차선 경로 미연결**: camera→차선인식 경로는 topic 불일치로 동작하지 않는다(정적 분석 기준).
+3. **LiDAR 분기 미연결**: pathtracking의 LiDAR 분기는 이 ws에 발행자가 없다.
+
+<details><summary>정리 이력</summary>
+
+- `vectornav_msgs`를 `../src/vectornav/vectornav_msgs`에서 복사해 추가 — `vectornav/CMakeLists.txt`의 `find_package(vectornav_msgs REQUIRED)` 해석용.
+- 전 패키지를 `erp42_main/src/` 하위로 이동 — colcon 기본 스캔 경로(`<ws>/src`)에 맞춤.
+- 두 조치 모두 정적 분석(코드/구조) 기준이며, 그 밖의 빌드 에러가 남아 있을 가능성은 배제하지 못한다.
+</details>
