@@ -26,3 +26,8 @@ __pycache__/
 # docs/docu/(대회 원본, 팀원 PII 포함)·docs/portfolio/·docs/plans/·docs/decisions/·docs/state.md 모두 로컬 전용.
 # 포트폴리오 제출물(자소서/포트폴리오 PDF)은 이 repo 밖 별도 산출물로 관리.
 docs/
+
+# 내부 문서 — 로컬 전용(af5a43d와 같은 취지)
+/CLAUDE.md
+/PORTFOLIO_SOURCE.md
+/SKILL_INVENTORY.md
