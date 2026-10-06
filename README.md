@@ -58,6 +58,8 @@ waypoint xls ─▶ erp42_pubwaypointscnuservice_pymap3d ─ /waypoints_path1 �
 
 ![센서와 알루미늄 프레임을 얹은 ERP42 차량](images/erp42_platform.jpg)
 
+![ERP42 프레임에 장착한 u-blox GPS 모듈과 안테나](images/erp42_gps_mount.jpg)
+
 ## 저장소 구성
 ```
 colcon_ws/
