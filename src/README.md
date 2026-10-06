@@ -40,7 +40,7 @@ ERP42 자율주행 개발 워크스페이스이며, 이 저장소의 공개 기�
 | `pcl_clustering_py`, `cluster_bev` | PCL 기반 포인트클라우드 클러스터링 |
 | `Yolo_pt` | YOLO 가중치 로컬 보관 위치(`best.pt`, `last.pt`, `best_lane_yolov11.pt`) — `*.pt`는 gitignore라 공개 저장소에는 없다 |
 
-어느 launch·코드도 참조하지 않는 upstream 사본 6개(`hdl_localization`, `hdl_global_localization`, `ndt_omp`, `fast_gicp`, `pcl_ros`, `robot_localization`)는 루트 `third_party/`로 옮겼다(2026-10-06). 현재 측위는 `robot_localization`이 아니라 custom 선형 EKF(`erp42_ebimu_ekf_globalposition.py`)다.
+`src/`의 어떤 launch·코드도 참조하지 않는 upstream 사본 6개(`hdl_localization`, `hdl_global_localization`, `ndt_omp`, `fast_gicp`, `pcl_ros`, `robot_localization`)는 루트 `third_party/`로 옮겼다(2026-10-06). 현재 측위는 `robot_localization`이 아니라 custom 선형 EKF(`erp42_ebimu_ekf_globalposition.py`)다.
 
 ## `erp_driver/scripts` 구성
 날짜 prefix가 없는 파일이 현재 경로다: `erp42_ebimu_ekf_globalposition.py`, `erp42_pathtracking.py`, `erp42_controller.py`, `erp42_serial.py`(+waypoint 발행 `erp42_pubwaypointscnuservice_pymap3d.py`). `erp42_lanedetect.py`, `erp42_lanedetect_yolo.py`도 prefix가 없지만 실험 단계다. 이 구분은 파일명(날짜 prefix 유무) 기준이다.
@@ -57,7 +57,7 @@ lane 노드를 Controller 구조에 편입하면서 고친 배선:
 ## 검증
 - 빌드(2026-10-06, `third_party/` 이동 후): `colcon build --symlink-install --continue-on-error --base-paths src --cmake-args -DBUILD_TESTING=OFF`로 src 패키지 21개 중 19개 ✅(`erp_driver`, `erp_interfaces`, `ebimu_pkg`, `ntrip_client`, `ublox*`, `pcl_clustering_py`, `cluster_bev`, `usb_cam`, `vectornav*`, `yolo_*`, `velodyne_msgs`/`_pointcloud`/`_laserscan`). `velodyne_driver`❌(`libpcap-dev` 미설치로 `pcap.h` 없음), `velodyne`(메타패키지) 미처리. `BUILD_TESTING`을 켜면 `ament_lint_auto` 미설치로 실패한다. 노드 실행은 하지 않았다.
 - 위 수정 2건은 `erp_driver` 빌드 PASS + `ast.parse` 구문 확인까지 했다. `yolo_msgs.DetectionArray` import는 노드 기동 시점에만 확인 가능하다.
-- `waypoint`/`yolo_ros`/`rosbag_convert_clean_py`는 빌드·실행 미검증.
+- `yolo_ros`(`yolo_msgs`·`yolo_bringup` 포함)는 빌드만 확인, 실행 미검증. `waypoint`·`rosbag_convert_clean_py`는 colcon 패키지가 아니라 빌드 대상이 아니다.
 - 실기 성능 검증은 하지 않았다(위 수정분 포함).
 
 ## 한계 · 미완성

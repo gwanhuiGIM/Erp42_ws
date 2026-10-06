@@ -42,7 +42,7 @@ waypoint xls ─▶ erp42_pubwaypointscnuservice_pymap3d ─ /waypoints_path1 �
 | 실험(lane) | `erp42_lanedetect.py`, `erp42_lanedetect_yolo.py`, `yolo_ros` |
 | 실험·이력 | `scripts/archive/` 15개(LiDAR 회피·EKF·차선 이전 버전), `erp42_pathtracking_lidar_integrated.py`, `pcl_clustering_py`·`cluster_bev`(포인트클라우드 클러스터링), `lanedetect.py`·`claude_lanedetect.py`·`test*.py`(ROS 노드 아닌 영상 실험) |
 | upstream 사본(센서·추론) | `velodyne`, `ublox`, `ntrip_client`, `usb_cam`, `vectornav`, `yolo_ros` |
-| 미배선 upstream(`third_party/`) | `hdl_localization`, `hdl_global_localization`, `ndt_omp`, `fast_gicp`, `pcl_ros`, `robot_localization` — 어느 launch·코드도 참조하지 않아 `src/` 밖으로 옮겼다. `--base-paths src` 빌드에서 빠진다. 용량 때문에 샘플·테스트 데이터(`data/`, `test/*.bag`, `doc/*.pdf`)는 저장소에서 뺐다 |
+| 미배선 upstream(`third_party/`) | `hdl_localization`, `hdl_global_localization`, `ndt_omp`, `fast_gicp`, `pcl_ros`, `robot_localization` — `src/`의 어떤 launch·코드도 참조하지 않아 `src/` 밖으로 옮겼다. `--base-paths src` 빌드에서 빠진다. 용량 때문에 샘플·테스트 데이터(`data/`, `test/*.bag`, `doc/*.pdf`)는 저장소에서 뺐다 |
 
 ## 환경 · 장비
 - Ubuntu 22.04 + ROS 2 Humble, Python 3. GPU는 YOLO(실험 경로)에만 필요.
@@ -112,7 +112,7 @@ python3 src/erp_driver/scripts/erp42_controller.py           # → /erp42_ctrl_c
 **Controller를 먼저 끄면 시리얼이 직전 주행 명령을 계속 보낸다.** 비상 시에는 차체 비상정지/수동 전환을 쓴다.
 
 ## 검증
-- 빌드: 2026-09-18 기록, 이후 재실행하지 않음. `--packages-select` 개별로 `erp_driver` `erp_interfaces` `ntrip_client` `ublox_serialization` `ublox_msgs` `vectornav_msgs` `ublox_gps` PASS / `usb_cam` `vectornav` FAIL(`ament_lint_auto` 미설치).
+- 빌드: 2026-10-06 `third_party/` 이동 후 `--base-paths src --cmake-args -DBUILD_TESTING=OFF`로 src 패키지 21개 중 19개 PASS, `velodyne_driver` FAIL(`libpcap-dev` 미설치), `velodyne` 미처리(위 "설치" 절). 노드 실행은 하지 않았다.
 - 자동 로직 테스트는 없다(`test/`는 린트뿐).
 - 실기 성능 검증은 하지 않았다(대회 뒤 수정분 포함). 대회 주행 성능 수치도 이 저장소에 남아 있지 않다.
 
