@@ -22,6 +22,11 @@ __pycache__/
 # 대용량 바이너리 — GitHub 100MB 제한 초과(YOLO best.pt/last.pt 각 131MB) → 필요시 Git LFS로 별도 관리
 *.pt
 
+# third_party upstream 샘플·테스트 데이터 — 히스토리 용량의 약 91%(2026-10-06 히스토리에서 제거), 로컬 보존
+third_party/*/data/
+third_party/robot_localization/test/*.bag
+third_party/robot_localization/doc/*.pdf
+
 # 내부 작업/기록 문서 전체 — 로컬 보존, GitHub 미공개(포트폴리오는 코드+README만 공개)
 # docs/docu/(대회 원본, 팀원 PII 포함)·docs/portfolio/·docs/plans/·docs/decisions/·docs/state.md 모두 로컬 전용.
 # 포트폴리오 제출물(자소서/포트폴리오 PDF)은 이 repo 밖 별도 산출물로 관리.

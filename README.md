@@ -42,7 +42,7 @@ waypoint xls ─▶ erp42_pubwaypointscnuservice_pymap3d ─ /waypoints_path1 �
 | 실험(lane) | `erp42_lanedetect.py`, `erp42_lanedetect_yolo.py`, `yolo_ros` |
 | 실험·이력 | `scripts/archive/` 15개(LiDAR 회피·EKF·차선 이전 버전), `erp42_pathtracking_lidar_integrated.py`, `pcl_clustering_py`·`cluster_bev`(포인트클라우드 클러스터링), `lanedetect.py`·`claude_lanedetect.py`·`test*.py`(ROS 노드 아닌 영상 실험) |
 | upstream 사본(센서·추론) | `velodyne`, `ublox`, `ntrip_client`, `usb_cam`, `vectornav`, `yolo_ros` |
-| 미배선 upstream(`third_party/`) | `hdl_localization`, `hdl_global_localization`, `ndt_omp`, `fast_gicp`, `pcl_ros`, `robot_localization` — 어느 launch·코드도 참조하지 않아 `src/` 밖으로 옮겼다. `--base-paths src` 빌드에서 빠진다 |
+| 미배선 upstream(`third_party/`) | `hdl_localization`, `hdl_global_localization`, `ndt_omp`, `fast_gicp`, `pcl_ros`, `robot_localization` — 어느 launch·코드도 참조하지 않아 `src/` 밖으로 옮겼다. `--base-paths src` 빌드에서 빠진다. 용량 때문에 샘플·테스트 데이터(`data/`, `test/*.bag`, `doc/*.pdf`)는 저장소에서 뺐다 |
 
 ## 환경 · 장비
 - Ubuntu 22.04 + ROS 2 Humble, Python 3. GPU는 YOLO(실험 경로)에만 필요.
