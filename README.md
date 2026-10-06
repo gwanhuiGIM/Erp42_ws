@@ -41,7 +41,8 @@ waypoint xls ─▶ erp42_pubwaypointscnuservice_pymap3d ─ /waypoints_path1 �
 | 현재 경로 | `erp42_ebimu_ekf_globalposition.py`, `erp42_pubwaypointscnuservice_pymap3d.py`, `erp42_pathtracking.py`, `erp42_controller.py`, `erp42_serial.py`, `ebimu_pkg` |
 | 실험(lane) | `erp42_lanedetect.py`, `erp42_lanedetect_yolo.py`, `yolo_ros` |
 | 실험·이력 | `scripts/archive/` 15개(LiDAR 회피·EKF·차선 이전 버전), `erp42_pathtracking_lidar_integrated.py`, `pcl_clustering_py`·`cluster_bev`(포인트클라우드 클러스터링), `lanedetect.py`·`claude_lanedetect.py`·`test*.py`(ROS 노드 아닌 영상 실험) |
-| upstream 사본 | `velodyne`, `pcl_ros`, `hdl_localization`, `hdl_global_localization`, `ndt_omp`, `fast_gicp`, `robot_localization`(현재 경로에서는 쓰지 않음), `ublox`, `ntrip_client`, `usb_cam`, `vectornav`, `yolo_ros` |
+| upstream 사본(센서·추론) | `velodyne`, `ublox`, `ntrip_client`, `usb_cam`, `vectornav`, `yolo_ros` |
+| 미배선 upstream(`third_party/`) | `hdl_localization`, `hdl_global_localization`, `ndt_omp`, `fast_gicp`, `pcl_ros`, `robot_localization` — 어느 launch·코드도 참조하지 않아 `src/` 밖으로 옮겼다. `--base-paths src` 빌드에서 빠진다 |
 
 ## 환경 · 장비
 - Ubuntu 22.04 + ROS 2 Humble, Python 3. GPU는 YOLO(실험 경로)에만 필요.
@@ -65,7 +66,8 @@ colcon_ws/
 │   ├── erp_interfaces/  # ErpCmdMsg, ErpStatusMsg, SetOrigin.srv
 │   ├── ebimu_pkg/       # EBIMU → /ebimu_data
 │   ├── waypoint/        # waypoint xls 2개
-│   └── …                # 센서 드라이버·LiDAR 실험·upstream 사본
+│   └── …                # 센서 드라이버·LiDAR 실험
+├── third_party/    # 현재 흐름에 연결되지 않은 upstream 사본(NDT/GICP localization, robot_localization, pcl_ros)
 ├── erp42_main/     # 팀 협업 이력 참고용 정리본(과거 시점). 공개 기준 아님
 ├── scripts/        # 루트에 남은 단독 실험 스크립트(EKF·신호등)
 └── .env.example    # NTRIP 인증정보 템플릿
@@ -81,7 +83,7 @@ source /opt/ros/humble/setup.bash
 colcon build --symlink-install --base-paths src --packages-select erp_interfaces erp_driver ebimu_pkg
 ```
 - `--base-paths src`: 루트에 `erp42_main/src`도 있어서, 경로를 주지 않으면 같은 이름의 패키지가 두 번 잡힌다.
-- `--packages-select`로 나눠 빌드한다. `src` 전체를 한꺼번에 빌드하면 `ament_lint_auto`/`ament_cmake_cppcheck` 미설치와 `ndt_omp` 자체 문제로 일부 패키지가 실패한다(2026-09-18 기록).
+- `src` 전체 빌드(2026-10-06): `--cmake-args -DBUILD_TESTING=OFF`를 주면 21개 중 19개가 통과한다. `velodyne_driver`는 `libpcap-dev`(`pcap.h`)가 없어 실패하고, 이에 의존하는 `velodyne`은 처리되지 않는다. `BUILD_TESTING`을 켜면 `ament_lint_auto` 미설치로 `velodyne_msgs` 등이 실패한다.
 - numpy 2.x는 Humble cv_bridge와 맞지 않는다. opencv는 pip가 아니라 apt로 설치한다.
 
 ## 실행
