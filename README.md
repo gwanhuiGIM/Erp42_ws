@@ -55,6 +55,8 @@ waypoint xls ─▶ erp42_pubwaypointscnuservice_pymap3d ─ /waypoints_path1 �
 | 카메라(실험) | `usb_cam` | `params_1~4.yaml` |
 | Velodyne VLP-16(실험) | `velodyne` | — |
 
+![센서와 알루미늄 프레임을 얹은 ERP42 차량](images/erp42_platform.jpg)
+
 ## 저장소 구성
 ```
 colcon_ws/
