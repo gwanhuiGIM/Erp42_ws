@@ -1,6 +1,6 @@
 # ERP42 자율주행 워크스페이스
 
-2025 대학생 창작자동차 경진대회 출품용 ERP42(Wego Robotics 4륜 전기차) 자율주행 스택이다. GPS·IMU·엔코더로 위치를 추정하고, 미리 기록한 GPS waypoint 경로를 추종하도록 ERP42에 조향·속도 명령을 보낸다. ROS 2 Humble 기반이며, 노드 대부분은 Python(rclpy)으로 작성했다.
+2025 대학생 창작모빌리티 경진대회 출품용 ERP42(Wego Robotics 4륜 전기차) 자율주행 스택이다. GPS·IMU·엔코더로 위치를 추정하고, 미리 기록한 GPS waypoint 경로를 추종하도록 ERP42에 조향·속도 명령을 보낸다. ROS 2 Humble 기반이며, 노드 대부분은 Python(rclpy)으로 작성했다.
 
 > 출처: 팀 MTP(충남대) 팀 프로젝트(실개발 2~3인)의 대회 코드. 대회 뒤 이 저장소에서 바뀐 것은 README 정리와 `src/` 배선 버그 일부 수정이다(내용은 [`src/README.md`](src/README.md)).
 
