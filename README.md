@@ -4,7 +4,9 @@
 
 > 출처: 팀 MTP(충남대) 팀 프로젝트(실개발 2~3인)의 대회 코드. 대회 뒤 이 저장소에서 바뀐 것은 README 정리와 `src/` 배선 버그 일부 수정이다(내용은 [`src/README.md`](src/README.md)).
 
-> 🎬 **대표 영상·자료** — 우리 팀 대회 주행 영상은 없어 다음 자료로 대신한다: [대회 진행 방식 참고 영상](https://www.youtube.com/watch?v=YCeGdbSMRuc)(본선 출전 팀 주행, 우리 팀 아님) · [waypoint 추종·LiDAR 회피 테스트 영상](assets/erp42_test_waypoint_lidar_avoid.mp4)(팀 내부, 71초) · 참고 문서 [연구계획서](assets/erp42_research_plan.pdf) · [기술보고서](assets/erp42_tech_report.pdf)
+> 🎬 **대표 영상·자료** — 우리 팀 대회 주행 영상은 없어 다음 자료로 대신한다: [대회 진행 방식 참고 영상](https://www.youtube.com/watch?v=YCeGdbSMRuc)(본선 출전 팀 주행, 우리 팀 아님) · [waypoint 추종·LiDAR 회피 테스트 영상](assets/erp42_test_waypoint_lidar_avoid.mp4)(팀 내부, 71초)
+>
+> 📄 [연구계획서(PDF, 10쪽)](assets/erp42_research_plan.pdf) · [기술보고서(PDF, 22쪽)](assets/erp42_tech_report.pdf) — 세부 기술 문서
 
 > **핵심 설계**: 주행 명령을 내는 노드(경로추종·차선)는 시리얼에 직접 쓰지 않는다. 각자 `/erp42_ctrl_cmd/<출처>`로 발행하고, `erp42_controller.py` 한 곳이 최근 0.2초 안에 들어온 유효 명령 하나를 골라 `/erp42_ctrl_cmd`로 넘긴다. 유효 명령이 없으면 Controller가 brake=155 정지 명령을 낸다. 명령 출처가 바뀌어도 시리얼 노드는 수정 없이 그대로 쓸 수 있게 나뉘어 있다.
 
