@@ -56,9 +56,9 @@ waypoint xls ─▶ erp42_pubwaypointscnuservice_pymap3d ─ /waypoints_path1 �
 | 카메라(실험) | `usb_cam` | `params_1~4.yaml` |
 | Velodyne VLP-16(실험) | `velodyne` | — |
 
-![센서와 알루미늄 프레임을 얹은 ERP42 차량](images/erp42_platform.jpg)
+![센서와 알루미늄 프레임을 얹은 ERP42 차량](assets/erp42_platform.jpg)
 
-![ERP42 프레임에 장착한 u-blox GPS 모듈과 안테나](images/erp42_gps_mount.jpg)
+![ERP42 프레임에 장착한 u-blox GPS 모듈과 안테나](assets/erp42_gps_mount.jpg)
 
 > 🎬 **대회 진행 방식 참고 영상**: [YouTube](https://www.youtube.com/watch?v=YCeGdbSMRuc) — 우리 팀 시연 영상이 아니다. 예선(트랙 주행·highway 예선 코스 주행)을 통과한 상위 팀만 참가하는 본선의 출전 팀 주행 영상으로, 대회가 어떤 방식으로 진행되는지 보여 주는 참고 자료다.
 
@@ -66,9 +66,11 @@ waypoint xls ─▶ erp42_pubwaypointscnuservice_pymap3d ─ /waypoints_path1 �
 
 | 차선 감지 알고리즘 구현용 데이터 수집 (25.07) | 예선 미션 대비 LiDAR 장애물 트랙 주행 시뮬레이션 (25.07) |
 |:--:|:--:|
-| <img src="images/22.jpg" width="300" alt="교내 도로에서 차선 감지용 영상 데이터를 수집하는 ERP42"> | <img src="images/44.jpg" width="300" alt="실내 라바콘 장애물 트랙 앞의 ERP42"> |
+| <img src="assets/erp42_test_lane_data_collection.jpg" width="300" alt="교내 도로에서 차선 감지용 영상 데이터를 수집하는 ERP42"> | <img src="assets/erp42_test_lidar_obstacle_track.jpg" width="300" alt="실내 라바콘 장애물 트랙 앞의 ERP42"> |
 
-🎞️ [waypoint 추종 및 LiDAR 회피 테스트 영상 (25.04, 71초)](images/11.mp4)
+🎞️ [waypoint 추종 및 LiDAR 회피 테스트 영상 (25.04, 71초)](assets/erp42_test_waypoint_lidar_avoid.mp4)
+
+📄 **참고 문서** (팀 MTP가 대회 제출용으로 함께 작성, 개인정보 처리본): [연구계획서](assets/erp42_research_plan.pdf) · [기술보고서](assets/erp42_tech_report.pdf)
 
 ## 저장소 구성
 ```
