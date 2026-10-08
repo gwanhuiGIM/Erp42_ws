@@ -10,35 +10,40 @@
 
 > **핵심 설계**: 주행 명령을 내는 노드(경로추종·차선)는 시리얼에 직접 쓰지 않는다. 각자 `/erp42_ctrl_cmd/<출처>`로 발행하고, `erp42_controller.py` 한 곳이 최근 0.2초 안에 들어온 유효 명령 하나를 골라 `/erp42_ctrl_cmd`로 넘긴다. 유효 명령이 없으면 Controller가 brake=155 정지 명령을 낸다. 명령 출처가 바뀌어도 시리얼 노드는 수정 없이 그대로 쓸 수 있게 나뉘어 있다.
 
-<a id="contribution"></a>
-## 프로젝트 요약 · 본인 담당 (김관희)
+## 환경 · 장비
 
-> 포트폴리오용 프로젝트 요약입니다. 이 저장소의 코드는 팀 MTP의 대회 코드이고, 제 역할 범위는 **본인 담당** 행에 적었습니다. 접힌 '프로젝트 기술 전체'는 팀 전체 시스템 설명입니다. 다른 프로젝트: [github.com/gwanhuiGIM](https://github.com/gwanhuiGIM)
+- Ubuntu 22.04 + ROS 2 Humble, Python 3. GPU는 YOLO(실험 경로)에만 필요.
+- 장비(코드 기본값 기준, 실제 장치 번호는 연결 순서에 따라 바뀜):
 
-**실제 주행시험장에서 달리는 자율주행 인지·판단·제어 노드를 설계해, 경진대회 무인모빌리티 부문에 팀장으로 출전하였습니다.**<br>
-수행 미션은 도로 경로 Navigation·장애물 우회·신호등 인식·돌발 장애물 정지 등이고, 팀원들과 함께 센서를 EKF로 융합해 측위를 구성했습니다. 특히 GPS 오차가 커지는 터널, drift하는 IMU처럼 인지 일부가 빠지는 상황에서도 멈추지 않는 측위·경로추종 기반을 만들어 실차 대회를 완주했습니다.
+| 장비 | 드라이버 | 설정 |
+|---|---|---|
+| ERP42 | `erp42_serial.py` | `port` 파라미터 — `erp42_base.launch.py`로 띄우면 `/dev/ttyUSB0`(코드 기본값 `/dev/ttyUSB1`은 launch 없이 실행할 때만). 실제 장치명에 맞게 launch를 고친다. 115200 |
+| u-blox GPS + NTRIP RTK | `ublox_gps`, `ntrip_client` | NTRIP 계정은 환경변수 `NTRIP_USERNAME`/`NTRIP_PASSWORD`(`.env.example`) |
+| EBIMU | `ebimu_pkg/ebimu_publisher.py` | 포트를 실행 시 `input()` 프롬프트로 입력 |
+| 카메라(실험) | `usb_cam` | `params_1~4.yaml` |
+| Velodyne VLP-16(실험) | `velodyne` | — |
 
-ERP42 4륜 전기차 플랫폼 · 팀 MTP(충남대), 실개발 2\~3인 · **팀장** (24.08\~25.11)
-**본인 담당:** 팀장(개발 일정 수립·공유, 실습 환경 구성, 인수인계 문서화) · waypoint 경로추종 · 명령 중재 판단 노드
-**팀원들과 함께:** 센서 bring-up, EKF 센서퓨전 측위, 실차 테스트·튜닝
-
-- **개요:** 예선 10분·본선 15분 단일 주행으로 도로 경로 Navigation·장애물 우회·신호등 인식·돌발 장애물 정지 미션을 통과하는 기록을 경쟁하는 대회
-- **센서 → 측위 (팀원들과 함께):** LiDAR(VLP-16)·카메라·IMU·RTK-GPS bring-up → 휠 오도메트리를 IMU·GPS와 EKF로 융합해 120m 안팎 GPS 음영구간 대응
-- **경로추종 (본인):** Pure Pursuit·Stanley 검토 → heading error 비례 조향 + 직전 스텝과의 저역통과 blending으로 곡선 조향 튐 억제
-- **명령 중재 (본인):** 인지 모듈마다 제각각 내는 명령을 통제할 지점이 없음 → 차선/경로 채널을 우선순위·유효시간으로 중재, 유효 입력이 없으면 full-brake하는 판단 노드 prototype
-- **실차 문제:** 카메라 frame drop, 전력(보조배터리 추가), 진동에 따른 카메라·IMU 자세 변화, brake oil 누유, GNSS·ROS2 끊김
-  - → 튜닝 → 테스트 주행 → rosbag 로깅 → 분석을 반복하며 포트·RTK·속도·brake 값 조정
-- **결과·한계:** 인지 모듈 일부가 빠져도 측위·경로추종이 유지돼 완주(팀 회고 기준). 순위·정량 지표는 로그가 없어 미기재
-- **회고:** "무엇이 없어도 버티는가"를 먼저 설계하고, 성능은 튜닝·테스트·로깅 반복에서 나온다
+## 저장소 구성
 
 <details>
-<summary><b>프로젝트 기술 전체</b></summary>
+<summary>디렉터리 구성 · erp42_main과의 차이</summary>
 
-- **측위:** 휠 오도메트리 + IMU + GPS(u-blox ZED-F9P, NTRIP RTK)를 GPS covariance 가중 EKF로 융합, pymap3d로 geodetic→ENU 변환. 보고서의 UKF와 달리 최종 코드는 EKF
-- **경로계획·추종:** Bézier 곡선 경로계획 학습, OSM/JOSM 도로 경로 → UTM waypoint 생성, heading error P 조향 + 저역통과(`alpha=0.65`) blending
-- **판단:** lane/path 2채널 우선순위·freshness timeout 중재, 입력 부재 시 full-brake (20Hz, source-level prototype)
-- **인지:** 카메라 차선 인식(YOLO·HSV), LiDAR 장애물 인식(2D gap-following 설계 → 3D PCL/DBSCAN clustering 실험)
-- **차량 I/O:** ERP42 40Hz serial packet 송수신, 경로추종·판단·통신을 역할별 ROS2 노드로 분리
+```
+colcon_ws/
+├── src/            # 공개 기준 ws — 아래 흐름은 모두 여기 기준 (상세: src/README.md)
+│   ├── erp_driver/      # 시리얼 드라이버 + 측위·경로·Controller 스크립트(scripts/)
+│   ├── erp_interfaces/  # ErpCmdMsg, ErpStatusMsg, SetOrigin.srv
+│   ├── ebimu_pkg/       # EBIMU → /ebimu_data
+│   ├── waypoint/        # waypoint xls 2개
+│   └── …                # 센서 드라이버·LiDAR 실험
+├── third_party/    # 현재 흐름에 연결되지 않은 upstream 사본(NDT/GICP localization, robot_localization, pcl_ros)
+├── erp42_main/     # 팀 협업 이력 참고용 정리본(과거 시점). 공개 기준 아님
+├── scripts/        # 루트에 남은 단독 실험 스크립트(EKF·신호등)
+└── .env.example    # NTRIP 인증정보 템플릿
+```
+저장소에 없는 것: YOLO 가중치(`src/Yolo_pt/*.pt`, 파일당 131 MB라 gitignore — 필요하면 따로 받아야 함), `.env`(직접 만듦), 주행 rosbag.
+
+`erp42_main/`과의 차이(협업 이력 참고): `erp42_main`에는 Controller가 없어서 pathtracking이 `/erp42_ctrl_cmd`로 바로 발행하고(brake=1, `max_linear_speed` 사용), LiDAR·localization 실험 스택이 없다. 자세한 내용은 [`erp42_main/README.md`](erp42_main/README.md).
 
 </details>
 
@@ -125,43 +130,6 @@ waypoint xls ─▶ erp42_pubwaypointscnuservice_pymap3d ─ /waypoints_path1 �
 |---|---|---|
 | [`src/README.md`](src/README.md) | 패키지별 역할, 대회 뒤 수정 내역, 빌드 기록 | 정본 |
 | [`erp42_main/README.md`](erp42_main/README.md) | 과거 팀 정리본의 구성과 차이 | 참고 이력 |
-
-## 환경 · 장비
-
-- Ubuntu 22.04 + ROS 2 Humble, Python 3. GPU는 YOLO(실험 경로)에만 필요.
-- 장비(코드 기본값 기준, 실제 장치 번호는 연결 순서에 따라 바뀜):
-
-| 장비 | 드라이버 | 설정 |
-|---|---|---|
-| ERP42 | `erp42_serial.py` | `port` 파라미터 — `erp42_base.launch.py`로 띄우면 `/dev/ttyUSB0`(코드 기본값 `/dev/ttyUSB1`은 launch 없이 실행할 때만). 실제 장치명에 맞게 launch를 고친다. 115200 |
-| u-blox GPS + NTRIP RTK | `ublox_gps`, `ntrip_client` | NTRIP 계정은 환경변수 `NTRIP_USERNAME`/`NTRIP_PASSWORD`(`.env.example`) |
-| EBIMU | `ebimu_pkg/ebimu_publisher.py` | 포트를 실행 시 `input()` 프롬프트로 입력 |
-| 카메라(실험) | `usb_cam` | `params_1~4.yaml` |
-| Velodyne VLP-16(실험) | `velodyne` | — |
-
-## 저장소 구성
-
-<details>
-<summary>디렉터리 구성 · erp42_main과의 차이</summary>
-
-```
-colcon_ws/
-├── src/            # 공개 기준 ws — 위 흐름은 모두 여기 기준 (상세: src/README.md)
-│   ├── erp_driver/      # 시리얼 드라이버 + 측위·경로·Controller 스크립트(scripts/)
-│   ├── erp_interfaces/  # ErpCmdMsg, ErpStatusMsg, SetOrigin.srv
-│   ├── ebimu_pkg/       # EBIMU → /ebimu_data
-│   ├── waypoint/        # waypoint xls 2개
-│   └── …                # 센서 드라이버·LiDAR 실험
-├── third_party/    # 현재 흐름에 연결되지 않은 upstream 사본(NDT/GICP localization, robot_localization, pcl_ros)
-├── erp42_main/     # 팀 협업 이력 참고용 정리본(과거 시점). 공개 기준 아님
-├── scripts/        # 루트에 남은 단독 실험 스크립트(EKF·신호등)
-└── .env.example    # NTRIP 인증정보 템플릿
-```
-저장소에 없는 것: YOLO 가중치(`src/Yolo_pt/*.pt`, 파일당 131 MB라 gitignore — 필요하면 따로 받아야 함), `.env`(직접 만듦), 주행 rosbag.
-
-`erp42_main/`과의 차이(협업 이력 참고): `erp42_main`에는 Controller가 없어서 pathtracking이 `/erp42_ctrl_cmd`로 바로 발행하고(brake=1, `max_linear_speed` 사용), LiDAR·localization 실험 스택이 없다. 자세한 내용은 [`erp42_main/README.md`](erp42_main/README.md).
-
-</details>
 
 ## 설치
 
