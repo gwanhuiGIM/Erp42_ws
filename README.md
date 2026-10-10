@@ -86,15 +86,16 @@ colcon_ws/
 
 ## 시스템 구조
 
-```
-ublox GPS ─ /ublox_gps_node/fix ─┐
-EBIMU ───── /ebimu_data ─────────┼─▶ erp42_ebimu_ekf_globalposition ─ /odom_ekf ─┐
-erp42_serial ─ /erp42_status ────┘          (선형 EKF, ENU)                     │
-                                                                                ▼
-waypoint xls ─▶ erp42_pubwaypointscnuservice_pymap3d ─ /waypoints_path1 ─▶ erp42_pathtracking
-                                                                                │ /erp42_ctrl_cmd/path (brake=2)
-(실험) camera ─▶ erp42_lanedetect ─ /erp42_ctrl_cmd/lane (brake=3) ┐            ▼
-                                                                   └─▶ erp42_controller ─ /erp42_ctrl_cmd ─▶ erp42_serial ─▶ ERP42
+```mermaid
+flowchart LR
+    GPS["ublox GPS"] -->|"/ublox_gps_node/fix"| EKF
+    IMU["EBIMU"] -->|"/ebimu_data"| EKF
+    SER_IN["erp42_serial"] -->|"/erp42_status"| EKF
+    EKF["erp42_ebimu_ekf_globalposition<br/>(선형 EKF, ENU)"] -->|"/odom_ekf"| PT
+    XLS["waypoint xls"] --> WP["erp42_pubwaypointscnuservice_pymap3d"] -->|"/waypoints_path1"| PT["erp42_pathtracking"]
+    PT -->|"/erp42_ctrl_cmd/path (brake=2)"| CTRL
+    CAMERA["(실험) camera"] --> LD["erp42_lanedetect"] -->|"/erp42_ctrl_cmd/lane (brake=3)"| CTRL
+    CTRL["erp42_controller"] -->|"/erp42_ctrl_cmd"| SER_OUT["erp42_serial"] --> ERP["ERP42"]
 ```
 
 <details>
