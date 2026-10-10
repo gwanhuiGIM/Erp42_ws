@@ -8,7 +8,7 @@
 >
 > 📄 [연구계획서(PDF, 10쪽)](assets/erp42_research_plan.pdf) · [기술보고서(PDF, 22쪽)](assets/erp42_tech_report.pdf) — 세부 기술 문서
 
-> **핵심 설계**: 주행 명령을 내는 노드(경로추종·차선)는 시리얼에 직접 쓰지 않는다. 각자 `/erp42_ctrl_cmd/<출처>`로 발행하고, `erp42_controller.py` 한 곳이 최근 0.2초 안에 들어온 유효 명령 하나를 골라 `/erp42_ctrl_cmd`로 넘긴다. 유효 명령이 없으면 Controller가 brake=155 정지 명령을 낸다. 명령 출처가 바뀌어도 시리얼 노드는 수정 없이 그대로 쓸 수 있게 나뉘어 있다.
+> **핵심 설계**: 주행 명령을 내는 노드(경로추종·차선)는 시리얼에 직접 쓰지 않는다. 각자 `/erp42_ctrl_cmd/<출처>`로 발행하고, [`erp42_controller.py`](src/erp_driver/scripts/erp42_controller.py) 한 곳이 최근 0.2초 안에 들어온 유효 명령 하나를 골라 `/erp42_ctrl_cmd`로 넘긴다. 유효 명령이 없으면 Controller가 brake=155 정지 명령을 낸다. 명령 출처가 바뀌어도 시리얼 노드는 수정 없이 그대로 쓸 수 있게 나뉘어 있다.
 
 ## 목차
 
@@ -25,13 +25,23 @@ _주제별 바로가기입니다. 본문 배치 순서와 다를 수 있습니�
 
 | 장비 | 드라이버 | 설정 |
 |---|---|---|
-| ERP42 | `erp42_serial.py` | `port` 파라미터 — `erp42_base.launch.py`로 띄우면 `/dev/ttyUSB0`(코드 기본값 `/dev/ttyUSB1`은 launch 없이 실행할 때만). 실제 장치명에 맞게 launch를 고친다. 115200 |
+| ERP42 | [`erp42_serial.py`](src/erp_driver/scripts/erp42_serial.py) | `port` 파라미터 — [`erp42_base.launch.py`](src/erp_driver/launch/erp42_base.launch.py)로 띄우면 `/dev/ttyUSB0`(코드 기본값 `/dev/ttyUSB1`은 launch 없이 실행할 때만). 실제 장치명에 맞게 launch를 고친다. 115200 |
 | u-blox GPS + NTRIP RTK | `ublox_gps`, `ntrip_client` | NTRIP 계정은 환경변수 `NTRIP_USERNAME`/`NTRIP_PASSWORD`(`.env.example`) |
-| EBIMU | `ebimu_pkg/ebimu_publisher.py` | 포트를 실행 시 `input()` 프롬프트로 입력 |
+| EBIMU | [`ebimu_pkg/ebimu_publisher.py`](src/ebimu_pkg/ebimu_pkg/ebimu_publisher.py) | 포트를 실행 시 `input()` 프롬프트로 입력 |
 | 카메라(실험) | `usb_cam` | `params_1~4.yaml` |
 | Velodyne VLP-16(실험) | `velodyne` | — |
 
 ## 저장소 구성
+
+**핵심 코드 바로가기**
+
+| 파일 | 하는 일 | 설명 위치 |
+|---|---|---|
+| ⭐ **[`scripts/erp42_controller.py`](src/erp_driver/scripts/erp42_controller.py)** | lane·path 명령 중 0.2 s 안의 유효 명령 하나를 골라 `/erp42_ctrl_cmd`로 넘기고, 없으면 정지 명령 | [시스템 구조](#시스템-구조) |
+| **[`scripts/erp42_pathtracking.py`](src/erp_driver/scripts/erp42_pathtracking.py)** | `/odom_ekf`와 waypoint 경로로 lookahead 지점을 골라 조향·속도 명령 계산 | [시스템 구조](#시스템-구조) |
+| **[`scripts/erp42_ebimu_ekf_globalposition.py`](src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py)** | 엔코더·조향 예측 + GPS 갱신 선형 EKF로 `/odom_ekf` 발행 | [시스템 구조](#시스템-구조) |
+| **[`scripts/erp42_pubwaypointscnuservice_pymap3d.py`](src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py)** | waypoint xls 위경도를 원점 기준 ENU `nav_msgs/Path`로 변환 | [시스템 구조](#시스템-구조) |
+| **[`scripts/erp42_serial.py`](src/erp_driver/scripts/erp42_serial.py)** | 명령을 ERP42 패킷으로 40 Hz 송신, 차량 상태를 `/erp42_status`로 발행 | [시스템 구조](#시스템-구조) |
 
 <details>
 <summary>디렉터리 구성 · erp42_main과의 차이</summary>
@@ -39,7 +49,7 @@ _주제별 바로가기입니다. 본문 배치 순서와 다를 수 있습니�
 ```
 colcon_ws/
 ├── src/            # 공개 기준 ws — 아래 흐름은 모두 여기 기준 (상세: src/README.md)
-│   ├── erp_driver/      # 시리얼 드라이버 + 측위·경로·Controller 스크립트(scripts/)
+│   ├── erp_driver/      # ★ 시리얼 드라이버 + 측위·경로·Controller 스크립트(scripts/)
 │   ├── erp_interfaces/  # ErpCmdMsg, ErpStatusMsg, SetOrigin.srv
 │   ├── ebimu_pkg/       # EBIMU → /ebimu_data
 │   ├── waypoint/        # waypoint xls 2개
@@ -48,6 +58,7 @@ colcon_ws/
 ├── erp42_main/     # 팀 협업 이력 참고용 정리본(과거 시점). 공개 기준 아님
 ├── scripts/        # 루트에 남은 단독 실험 스크립트(EKF·신호등)
 └── .env.example    # NTRIP 인증정보 템플릿
+# ★ = 위 "핵심 코드 바로가기" 파일이 있는 곳
 ```
 저장소에 없는 것: YOLO 가중치(`src/Yolo_pt/*.pt`, 파일당 131 MB라 gitignore — 필요하면 따로 받아야 함), `.env`(직접 만듦), 주행 rosbag.
 
@@ -59,12 +70,12 @@ colcon_ws/
 
 | 기능 | 노드 → 출력 | 하는 일 |
 |---|---|---|
-| GPS·IMU·엔코더 측위 | `erp42_ebimu_ekf_globalposition.py` → `/odom_ekf` | 엔코더·조향으로 예측하고 GPS로 갱신하는 EKF. 원점 기준 ENU 좌표로 20 Hz 발행 |
-| GPS waypoint 경로 | `erp42_pubwaypointscnuservice_pymap3d.py` → `/waypoints_path1` | xls의 위경도(`Longitude`, `Latitude` 열)를 `/set_origin`으로 정한 원점 기준 ENU `nav_msgs/Path`로 변환 |
-| 경로 추종 | `erp42_pathtracking.py` → `/erp42_ctrl_cmd/path` | lookahead 3 m 지점을 목표로 조향을 계산하고, 마지막 waypoint 1.5 m 안에 들어오면 정지 명령 |
+| GPS·IMU·엔코더 측위 | [`erp42_ebimu_ekf_globalposition.py`](src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py) → `/odom_ekf` | 엔코더·조향으로 예측하고 GPS로 갱신하는 EKF. 원점 기준 ENU 좌표로 20 Hz 발행 |
+| GPS waypoint 경로 | [`erp42_pubwaypointscnuservice_pymap3d.py`](src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py) → `/waypoints_path1` | xls의 위경도(`Longitude`, `Latitude` 열)를 `/set_origin`으로 정한 원점 기준 ENU `nav_msgs/Path`로 변환 |
+| 경로 추종 | [`erp42_pathtracking.py`](src/erp_driver/scripts/erp42_pathtracking.py) → `/erp42_ctrl_cmd/path` | lookahead 3 m 지점을 목표로 조향을 계산하고, 마지막 waypoint 1.5 m 안에 들어오면 정지 명령 |
 | 명령 중재 · 정지 fallback | `erp42_controller.py` → `/erp42_ctrl_cmd` | lane·path 명령 중 0.2 s 안의 유효 명령 하나를 채택, 없으면 정지 명령 |
 | ERP42 구동 | `erp42_serial.py` ↔ ERP42 | 명령을 ERP42 패킷으로 40 Hz 송신하고 차량 상태를 `/erp42_status`로 발행 |
-| 차선 인식(실험) | `erp42_lanedetect.py`, `erp42_lanedetect_yolo.py` → `/erp42_ctrl_cmd/lane` | 카메라 영상에서 차선을 찾아 조향 명령을 Controller에 전달 |
+| 차선 인식(실험) | [`erp42_lanedetect.py`](src/erp_driver/scripts/erp42_lanedetect.py), [`erp42_lanedetect_yolo.py`](src/erp_driver/scripts/erp42_lanedetect_yolo.py) → `/erp42_ctrl_cmd/lane` | 카메라 영상에서 차선을 찾아 조향 명령을 Controller에 전달 |
 
 ## 차량 · 테스트 기록
 
@@ -113,7 +124,7 @@ flowchart LR
 |---|---|
 | 현재 경로 | `erp42_ebimu_ekf_globalposition.py`, `erp42_pubwaypointscnuservice_pymap3d.py`, `erp42_pathtracking.py`, `erp42_controller.py`, `erp42_serial.py`, `ebimu_pkg` |
 | 실험(lane) | `erp42_lanedetect.py`, `erp42_lanedetect_yolo.py`, `yolo_ros` |
-| 실험·이력 | `scripts/archive/` 15개(LiDAR 회피·EKF·차선 이전 버전), `erp42_pathtracking_lidar_integrated.py`, `pcl_clustering_py`·`cluster_bev`(포인트클라우드 클러스터링), `lanedetect.py`·`claude_lanedetect.py`·`test*.py`(ROS 노드 아닌 영상 실험) |
+| 실험·이력 | `scripts/archive/` 15개(LiDAR 회피·EKF·차선 이전 버전), [`erp42_pathtracking_lidar_integrated.py`](src/erp_driver/scripts/erp42_pathtracking_lidar_integrated.py), `pcl_clustering_py`·`cluster_bev`(포인트클라우드 클러스터링), [`lanedetect.py`](src/erp_driver/scripts/lanedetect.py)·[`claude_lanedetect.py`](src/erp_driver/scripts/claude_lanedetect.py)·`test*.py`(ROS 노드 아닌 영상 실험) |
 | upstream 사본(센서·추론) | `velodyne`, `ublox`, `ntrip_client`, `usb_cam`, `vectornav`, `yolo_ros` |
 | 미배선 upstream(`third_party/`) | `hdl_localization`, `hdl_global_localization`, `ndt_omp`, `fast_gicp`, `pcl_ros`, `robot_localization` — `src/`의 어떤 launch·코드도 참조하지 않아 `src/` 밖으로 옮겼다. `--base-paths src` 빌드에서 빠진다. 용량 때문에 샘플·테스트 데이터(`data/`, `test/*.bag`, `doc/*.pdf`)는 저장소에서 뺐다 |
 
