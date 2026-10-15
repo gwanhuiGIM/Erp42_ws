@@ -31,19 +31,6 @@ _주제별 바로가기입니다. 본문 배치 순서와 다를 수 있습니�
 
 ## 저장소 구성
 
-**핵심 코드 바로가기**
-
-| 파일 | 하는 일 | 설명 위치 |
-|---|---|---|
-| ⭐ **[`scripts/erp42_controller.py`](src/erp_driver/scripts/erp42_controller.py)** | lane·path 명령 중 0.2 s 안의 유효 명령 하나를 골라 `/erp42_ctrl_cmd`로 넘기고, 없으면 정지 명령 | [시스템 구조](#시스템-구조) |
-| **[`scripts/erp42_pathtracking.py`](src/erp_driver/scripts/erp42_pathtracking.py)** | `/odom_ekf`와 waypoint 경로로 lookahead 지점을 골라 조향·속도 명령 계산 | [시스템 구조](#시스템-구조) |
-| **[`scripts/erp42_ebimu_ekf_globalposition.py`](src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py)** | 엔코더·조향 예측 + GPS 갱신 선형 EKF로 `/odom_ekf` 발행 | [시스템 구조](#시스템-구조) |
-| **[`scripts/erp42_pubwaypointscnuservice_pymap3d.py`](src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py)** | waypoint xls 위경도를 원점 기준 ENU `nav_msgs/Path`로 변환 | [시스템 구조](#시스템-구조) |
-| **[`scripts/erp42_serial.py`](src/erp_driver/scripts/erp42_serial.py)** | 명령을 ERP42 패킷으로 40 Hz 송신, 차량 상태를 `/erp42_status`로 발행 | [시스템 구조](#시스템-구조) |
-
-<details>
-<summary>디렉터리 구성 · erp42_main과의 차이</summary>
-
 ```
 colcon_ws/
 ├── src/            # 공개 기준 ws — 아래 흐름은 모두 여기 기준 (상세: src/README.md)
@@ -56,8 +43,25 @@ colcon_ws/
 ├── erp42_main/     # 팀 협업 이력 참고용 정리본(과거 시점). 공개 기준 아님
 ├── scripts/        # 루트에 남은 단독 실험 스크립트(EKF·신호등)
 └── .env.example    # NTRIP 인증정보 템플릿
-# ★ = 위 "핵심 코드 바로가기" 파일이 있는 곳
+# ★ = 아래 "핵심 코드 바로가기" 파일이 있는 곳
 ```
+
+<details>
+<summary>핵심 코드 바로가기</summary>
+
+| 파일 | 하는 일 | 설명 위치 |
+|---|---|---|
+| ⭐ **[`scripts/erp42_controller.py`](src/erp_driver/scripts/erp42_controller.py)** | lane·path 명령 중 0.2 s 안의 유효 명령 하나를 골라 `/erp42_ctrl_cmd`로 넘기고, 없으면 정지 명령 | [시스템 구조](#시스템-구조) |
+| **[`scripts/erp42_pathtracking.py`](src/erp_driver/scripts/erp42_pathtracking.py)** | `/odom_ekf`와 waypoint 경로로 lookahead 지점을 골라 조향·속도 명령 계산 | [시스템 구조](#시스템-구조) |
+| **[`scripts/erp42_ebimu_ekf_globalposition.py`](src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py)** | 엔코더·조향 예측 + GPS 갱신 선형 EKF로 `/odom_ekf` 발행 | [시스템 구조](#시스템-구조) |
+| **[`scripts/erp42_pubwaypointscnuservice_pymap3d.py`](src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py)** | waypoint xls 위경도를 원점 기준 ENU `nav_msgs/Path`로 변환 | [시스템 구조](#시스템-구조) |
+| **[`scripts/erp42_serial.py`](src/erp_driver/scripts/erp42_serial.py)** | 명령을 ERP42 패킷으로 40 Hz 송신, 차량 상태를 `/erp42_status`로 발행 | [시스템 구조](#시스템-구조) |
+
+</details>
+
+<details>
+<summary>저장소에 없는 것 · erp42_main과의 차이</summary>
+
 저장소에 없는 것: YOLO 가중치(`src/Yolo_pt/*.pt`, 파일당 131 MB라 gitignore — 필요하면 따로 받아야 함), `.env`(직접 만듦), 주행 rosbag.
 
 `erp42_main/`과의 차이(협업 이력 참고): `erp42_main`에는 Controller가 없어서 pathtracking이 `/erp42_ctrl_cmd`로 바로 발행하고(brake=1, `max_linear_speed` 사용), LiDAR·localization 실험 스택이 없다. 자세한 내용은 [`erp42_main/README.md`](erp42_main/README.md).
