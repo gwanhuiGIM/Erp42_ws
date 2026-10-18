@@ -99,17 +99,35 @@ colcon_ws/
 
 ## 시스템 구조
 
+<details>
+<summary>노드 구성도</summary>
+
 ```mermaid
-flowchart LR
-    GPS["ublox GPS"] -->|"/ublox_gps_node/fix"| EKF
-    IMU["EBIMU"] -->|"/ebimu_data"| EKF
-    SER_IN["erp42_serial"] -->|"/erp42_status"| EKF
-    EKF["erp42_ebimu_ekf_globalposition<br/>(선형 EKF, ENU)"] -->|"/odom_ekf"| PT
-    XLS["waypoint xls"] --> WP["erp42_pubwaypointscnuservice_pymap3d"] -->|"/waypoints_path1"| PT["erp42_pathtracking"]
-    PT -->|"/erp42_ctrl_cmd/path (brake=2)"| CTRL
-    CAMERA["(실험) camera"] --> LD["erp42_lanedetect"] -->|"/erp42_ctrl_cmd/lane (brake=3)"| CTRL
-    CTRL["erp42_controller"] -->|"/erp42_ctrl_cmd"| SER_OUT["erp42_serial"] --> ERP["ERP42"]
+flowchart TB
+    subgraph LOC["위치 추정"]
+        direction LR
+        GPS["ublox GPS"] -->|"/ublox_gps_node/fix"| EKF
+        IMU["EBIMU"] -->|"/ebimu_data"| EKF
+        SER_IN["erp42_serial"] -->|"/erp42_status"| EKF["erp42_ebimu_ekf_globalposition<br/>(선형 EKF, ENU)"]
+    end
+    subgraph TRACK["경로 추종"]
+        direction LR
+        XLS["waypoint xls"] --> WP["erp42_pubwaypointscnuservice_pymap3d"] -->|"/waypoints_path1"| PT["erp42_pathtracking"]
+    end
+    subgraph LANE["(실험) 차선 인식"]
+        direction LR
+        CAMERA["camera"] --> LD["erp42_lanedetect"]
+    end
+    subgraph ACT["제어 명령 · 구동"]
+        direction LR
+        CTRL["erp42_controller"] -->|"/erp42_ctrl_cmd"| SER_OUT["erp42_serial"] --> ERP["ERP42"]
+    end
+    LOC -->|"/odom_ekf → erp42_pathtracking"| TRACK
+    TRACK -->|"/erp42_ctrl_cmd/path (brake=2)"| ACT
+    LANE -->|"/erp42_ctrl_cmd/lane (brake=3)"| ACT
 ```
+
+</details>
 
 <details>
 <summary>노드별 동작 · 패키지 분류</summary>
