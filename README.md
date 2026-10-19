@@ -102,30 +102,43 @@ colcon_ws/
 <details>
 <summary>노드 구성도</summary>
 
+칸은 하는 일, 화살표는 주고받는 내용입니다. 노드·토픽 이름과 코드 위치는 그림 아래 표에 있습니다. 차량 통신 칸 두 개는 같은 노드(`erp42_serial`)의 수신 쪽과 송신 쪽입니다.
+
 ```mermaid
 flowchart TB
     subgraph LOC["위치 추정"]
         direction LR
-        GPS["ublox GPS"] -->|"/ublox_gps_node/fix"| EKF
-        IMU["EBIMU"] -->|"/ebimu_data"| EKF
-        SER_IN["erp42_serial"] -->|"/erp42_status"| EKF["erp42_ebimu_ekf_globalposition<br/>(선형 EKF, ENU)"]
+        GPS["GPS (RTK)"] -->|"위경도"| EKF
+        IMU["IMU"] -->|"자세"| EKF
+        SER_IN["차량 통신 (수신)"] -->|"속도 · 조향각"| EKF["위치 추정 EKF<br/>원점 기준 x · y · heading"]
     end
     subgraph TRACK["경로 추종"]
         direction LR
-        XLS["waypoint xls"] --> WP["erp42_pubwaypointscnuservice_pymap3d"] -->|"/waypoints_path1"| PT["erp42_pathtracking"]
+        XLS["waypoint 파일 (위경도)"] --> WP["경로 변환<br/>위경도 → 원점 기준 x · y"] -->|"경로"| PT["경로 추종<br/>lookahead 지점 → 조향 · 속도"]
     end
     subgraph LANE["(실험) 차선 인식"]
         direction LR
-        CAMERA["camera"] --> LD["erp42_lanedetect"]
+        CAMERA["카메라"] --> LD["차선 인식 → 조향"]
     end
-    subgraph ACT["제어 명령 · 구동"]
+    subgraph ACT["명령 선택 · 구동"]
         direction LR
-        CTRL["erp42_controller"] -->|"/erp42_ctrl_cmd"| SER_OUT["erp42_serial"] --> ERP["ERP42"]
+        CTRL["명령 선택<br/>유효한 명령 하나, 없으면 정지"] -->|"최종 명령"| SER_OUT["차량 통신 (송신)"] --> ERP["ERP42 차량"]
     end
-    LOC -->|"/odom_ekf → erp42_pathtracking"| TRACK
-    TRACK -->|"/erp42_ctrl_cmd/path (brake=2)"| ACT
-    LANE -->|"/erp42_ctrl_cmd/lane (brake=3)"| ACT
+    LOC -->|"현재 위치 · heading<br/>EKF → 경로 추종"| TRACK
+    TRACK -->|"경로 추종 명령 (brake=2)<br/>경로 추종 → 명령 선택"| ACT
+    LANE -->|"차선 명령 (brake=3)<br/>차선 인식 → 명령 선택"| ACT
 ```
+
+| 칸 | 코드 | 주고받는 토픽 |
+|---|---|---|
+| GPS | `ublox_gps` (외부 패키지) | 발행 `/ublox_gps_node/fix` |
+| IMU | [`ebimu_pkg/ebimu_publisher.py`](src/ebimu_pkg/ebimu_pkg/ebimu_publisher.py) | 발행 `/ebimu_data` |
+| 위치 추정 EKF | [`erp42_ebimu_ekf_globalposition.py`](src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py) | 구독 `/ublox_gps_node/fix` `/ebimu_data` `/erp42_status` · 발행 `/odom_ekf` |
+| 경로 변환 | [`erp42_pubwaypointscnuservice_pymap3d.py`](src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py), waypoint 파일 `src/waypoint/waypoints_real_*.xls` | 발행 `/waypoints_path1` |
+| 경로 추종 | [`erp42_pathtracking.py`](src/erp_driver/scripts/erp42_pathtracking.py) | 구독 `/odom_ekf` `/waypoints_path1` · 발행 `/erp42_ctrl_cmd/path` |
+| 차선 인식 | [`erp42_lanedetect.py`](src/erp_driver/scripts/erp42_lanedetect.py), [`erp42_lanedetect_yolo.py`](src/erp_driver/scripts/erp42_lanedetect_yolo.py) | 구독 카메라 영상 · 발행 `/erp42_ctrl_cmd/lane` |
+| 명령 선택 | [`erp42_controller.py`](src/erp_driver/scripts/erp42_controller.py) | 구독 `/erp42_ctrl_cmd/path` `/erp42_ctrl_cmd/lane` · 발행 `/erp42_ctrl_cmd` |
+| 차량 통신 (수신 · 송신) | [`erp42_serial.py`](src/erp_driver/scripts/erp42_serial.py) | 구독 `/erp42_ctrl_cmd` · 발행 `/erp42_status` |
 
 </details>
 
