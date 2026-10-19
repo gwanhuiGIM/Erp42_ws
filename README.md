@@ -110,7 +110,7 @@ flowchart TB
         direction LR
         GPS["GPS (RTK)"] -->|"위경도"| EKF
         IMU["IMU"] -->|"자세"| EKF
-        SER_IN["차량 통신 (수신)"] -->|"속도 · 조향각"| EKF["위치 추정 EKF<br/>원점 기준 x · y · heading"]
+        SER_IN["차량 통신 (수신)"] -->|"엔코더 · 조향각"| EKF["위치 추정 EKF<br/>원점 기준 x · y · heading"]
     end
     subgraph TRACK["경로 추종"]
         direction LR
@@ -135,7 +135,7 @@ flowchart TB
 | IMU | [`ebimu_pkg/ebimu_publisher.py`](src/ebimu_pkg/ebimu_pkg/ebimu_publisher.py) | 발행 `/ebimu_data` |
 | 위치 추정 EKF | [`erp42_ebimu_ekf_globalposition.py`](src/erp_driver/scripts/erp42_ebimu_ekf_globalposition.py) | 구독 `/ublox_gps_node/fix` `/ebimu_data` `/erp42_status` · 발행 `/odom_ekf` |
 | 경로 변환 | [`erp42_pubwaypointscnuservice_pymap3d.py`](src/erp_driver/scripts/erp42_pubwaypointscnuservice_pymap3d.py), waypoint 파일 `src/waypoint/waypoints_real_*.xls` | 발행 `/waypoints_path1` |
-| 경로 추종 | [`erp42_pathtracking.py`](src/erp_driver/scripts/erp42_pathtracking.py) | 구독 `/odom_ekf` `/waypoints_path1` · 발행 `/erp42_ctrl_cmd/path` |
+| 경로 추종 | [`erp42_pathtracking.py`](src/erp_driver/scripts/erp42_pathtracking.py) | 구독 `/odom_ekf` `/waypoints_path1` `/erp42_ctrl_cmd/lidar`(발행 노드는 `archive/`에만 있음) · 발행 `/erp42_ctrl_cmd/path` |
 | 차선 인식 | [`erp42_lanedetect.py`](src/erp_driver/scripts/erp42_lanedetect.py), [`erp42_lanedetect_yolo.py`](src/erp_driver/scripts/erp42_lanedetect_yolo.py) | 구독 카메라 영상 · 발행 `/erp42_ctrl_cmd/lane` |
 | 명령 선택 | [`erp42_controller.py`](src/erp_driver/scripts/erp42_controller.py) | 구독 `/erp42_ctrl_cmd/path` `/erp42_ctrl_cmd/lane` · 발행 `/erp42_ctrl_cmd` |
 | 차량 통신 (수신 · 송신) | [`erp42_serial.py`](src/erp_driver/scripts/erp42_serial.py) | 구독 `/erp42_ctrl_cmd` · 발행 `/erp42_status` |
