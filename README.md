@@ -93,6 +93,8 @@ colcon_ws/
 
 ![센서와 알루미늄 프레임을 얹은 ERP42 차량](assets/erp42_platform.jpg)
 
+![라바콘이 놓인 아스팔트 코스를 달리는 06번 ERP42 차량 — 대회 실기 주행](assets/erp42_competition_run.jpg)
+
 ![ERP42 프레임에 장착한 u-blox GPS 모듈과 안테나](assets/erp42_gps_mount.jpg)
 
 > 🎬 **대회 진행 방식 참고 영상**: [YouTube](https://www.youtube.com/watch?v=YCeGdbSMRuc) — 우리 팀 시연 영상이 아니다. 예선(트랙 주행·highway 예선 코스 주행)을 통과한 상위 팀만 참가하는 본선의 출전 팀 주행 영상으로, 대회가 어떤 방식으로 진행되는지 보여 주는 참고 자료다.
